@@ -113,7 +113,7 @@
         <log4j.version>1.2.17</log4j.version>
         <spring.version>5.1.1.RELEASE</spring.version>
         <spring.boot.version>2.0.5.RELEASE</spring.boot.version>
-        <!--<rabbitmq.version>5.4.1</rabbitmq.version>-->
+        <opentracing.jaeger.version>1.0.1</opentracing.jaeger.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mockito.version>2.15.0</mockito.version>
         <jackson.version>2.9.4</jackson.version>
@@ -406,14 +406,14 @@
                 <role>Committer</role>
             </roles>
         </developer>
-        <!--<developer>-->
-            <!--<name>Steven van Beelen</name>-->
-            <!--<email>steven.vanbeelen@axoniq.io</email>-->
-            <!--<organization>AxonIQ</organization>-->
-            <!--<organizationUrl>https://axoniq.io</organizationUrl>-->
-            <!--<roles>-->
-                <!--<role>Committer</role>-->
-            <!--</roles>-->
         <!--</developer>-->
+        <!--<developer>-->
+        <!--<name>Steven van Beelen</name>-->
+        <!--<email>steven.vanbeelen@axoniq.io</email>-->
+        <!--<organization>AxonIQ</organization>-->
+        <!--<organizationUrl>https://axoniq.io</organizationUrl>-->
+        <!--<roles>-->
+        <!--<role>Committer</role>-->
+        <!--</roles>-->
     </developers>
 </project>
