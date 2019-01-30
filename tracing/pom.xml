@@ -44,6 +44,8 @@
             <artifactId>opentracing-spring-tracer-configuration-starter</artifactId>
             <version>0.1.0</version>
         </dependency>
+
+        <!-- THIS IS THE FULL FLEDGE STARTER WITH JAEGER WIRING -->
         <!--<dependency>-->
             <!--<groupId>io.opentracing.contrib</groupId>-->
             <!--<artifactId>opentracing-spring-jaeger-cloud-starter</artifactId>-->
