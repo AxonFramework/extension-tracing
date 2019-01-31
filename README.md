@@ -1,3 +1,3 @@
 ## Axon Framework - Tracing Extension
 
-This extension add tracing capabilities to Axon.
+This extension adds tracing capabilities to Axon.
