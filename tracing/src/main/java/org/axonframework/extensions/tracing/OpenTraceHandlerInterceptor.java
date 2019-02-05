@@ -23,7 +23,10 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.eventhandling.EventMessage;
-import org.axonframework.messaging.*;
+import org.axonframework.messaging.InterceptorChain;
+import org.axonframework.messaging.Message;
+import org.axonframework.messaging.MessageHandlerInterceptor;
+import org.axonframework.messaging.MetaData;
 import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.queryhandling.QueryMessage;
 import org.slf4j.Logger;
@@ -37,6 +40,9 @@ import org.slf4j.LoggerFactory;
  * @since 4.0
  */
 public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Message<?>> {
+
+    static final String TAG_AXON_PAYLOAD_TYPE = "axon.payload.type";
+    static final String TAG_AXON_ID = "axon.id";
 
     private final Logger LOGGER = LoggerFactory.getLogger(OpenTraceHandlerInterceptor.class);
 
@@ -67,23 +73,15 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
             spanBuilder = tracer.buildSpan(operationName);
         }
 
-        Object proceed;
-
-        try(Scope scope = spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(false)){
-
+        try (Scope scope = spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(false)) {
             //noinspection unchecked
             unitOfWork.onCleanup(u -> {
                 scope.span().finish();
             });
 
             handleMessage(scope.span(), unitOfWork.getMessage());
-
-            proceed = interceptorChain.proceed();
+            return interceptorChain.proceed();
         }
-
-
-        return proceed;
-
     }
 
     private void handleMessage(Span span, Message message) {
@@ -91,9 +89,10 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
         Class payloadType = message.getPayloadType();
         String messageType = resolveType(message);
 
-        span.setOperationName(String.format("%s %s", messageType, payloadType.getSimpleName()));
-        span.setTag("axon.Id", message.getIdentifier());
-        span.setTag("axon.payloadType", payloadType.toString());
+//        span.setOperationName(String.format("%s %s", messageType, payloadType.getSimpleName()));
+
+        span.setTag(TAG_AXON_ID, message.getIdentifier());
+        span.setTag(TAG_AXON_PAYLOAD_TYPE, payloadType.getName());
 
         LOGGER.info("Called: {}", message);
     }

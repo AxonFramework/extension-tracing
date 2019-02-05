@@ -45,6 +45,15 @@
             <version>0.1.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.opentracing</groupId>
+            <artifactId>opentracing-mock</artifactId>
+            <version>0.31.0</version>
+            <scope>test</scope>
+        </dependency>
+
+
+
         <!-- THIS IS THE FULL FLEDGE STARTER WITH JAEGER WIRING -->
         <!--<dependency>-->
             <!--<groupId>io.opentracing.contrib</groupId>-->
@@ -59,6 +68,7 @@
             <version>${spring.version}</version>
             <optional>true</optional>
         </dependency>
+
     </dependencies>
 
     <build>

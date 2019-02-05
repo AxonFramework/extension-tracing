@@ -41,22 +41,17 @@ public class OpenTraceDispatchInterceptor implements MessageDispatchInterceptor<
     @Override
     public BiFunction<Integer, Message<?>, Message<?>> handle(List<? extends Message<?>> messages) {
 
+
         ScopeManager scopeManager = tracer.scopeManager();
         Optional<SpanContext> spanContextOptional = Optional.ofNullable(scopeManager)
                 .map(ScopeManager::active)
                 .map(Scope::span)
                 .map(Span::context);
 
-        if (spanContextOptional.isPresent()) {
-            Optional<? extends Message<?>> singleMessage = messages.stream()
-                    .map(m -> {
-                        MapInjector injector = new MapInjector();
-                        tracer.inject(spanContextOptional.get(), Format.Builtin.TEXT_MAP, injector);
-                        return m.andMetaData(injector.getMetaData());
-                    }).findAny();
-            return singleMessage.<BiFunction<Integer, Message<?>, Message<?>>>map(message -> (i, m) -> message).orElseGet(() -> (i, m) -> m);
-        } else {
-            return (i, m) -> m;
-        }
+        return spanContextOptional.<BiFunction<Integer, Message<?>, Message<?>>>map(spanContext -> (index, message) -> {
+            MapInjector injector = new MapInjector();
+            tracer.inject(spanContext, Format.Builtin.TEXT_MAP, injector);
+            return message.andMetaData(injector.getMetaData());
+        }).orElseGet(() -> (i, m) -> m);
     }
 }

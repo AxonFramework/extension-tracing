@@ -19,16 +19,19 @@ import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
-import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
-import org.axonframework.extensions.tracing.OpenTraceHandlerInterceptor;
-import org.axonframework.extensions.tracing.TracingCommandGateway;
-import org.axonframework.extensions.tracing.TracingQueryGateway;
+import org.axonframework.config.EventProcessingConfiguration;
+import org.axonframework.config.EventProcessingConfigurer;
+import org.axonframework.extensions.tracing.*;
+import org.axonframework.messaging.correlation.CorrelationDataProvider;
+import org.axonframework.messaging.correlation.MessageOriginProvider;
 import org.axonframework.queryhandling.DefaultQueryGateway;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.springboot.autoconfig.EventProcessingAutoConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -77,6 +80,17 @@ public class TracingAutoConfiguration {
                 .commandBus(commandBus)
                 .dispatchInterceptors(openTraceDispatchInterceptor);
         return new TracingCommandGateway(builder, tracer);
+    }
+
+    @Bean
+    public CorrelationDataProvider tracingProvider(Tracer tracer) {
+        return new TracingProvider(tracer);
+    }
+
+
+    @Autowired
+    public void configureEventHandler(EventProcessingConfigurer config, OpenTraceHandlerInterceptor openTraceHandlerInterceptor){
+        config.registerDefaultHandlerInterceptor((configuration, name) -> openTraceHandlerInterceptor);
     }
 
 }

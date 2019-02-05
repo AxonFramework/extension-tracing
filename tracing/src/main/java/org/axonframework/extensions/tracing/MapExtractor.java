@@ -24,6 +24,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * @author Christophe Bouhier
+ * @since 4.0
+ */
 public class MapExtractor implements TextMap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MapExtractor.class);
