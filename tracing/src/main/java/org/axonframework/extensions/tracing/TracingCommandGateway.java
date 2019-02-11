@@ -45,11 +45,7 @@ public class TracingCommandGateway extends DefaultCommandGateway {
     @SuppressWarnings("unchecked")
     @Override
     public <R> CompletableFuture<R> send(Object command) {
-        return sendWithSpan(tracer, (tracer, parentSpan, childSpan) -> (CompletableFuture<R>) super.send(command)
-                .whenComplete((r, e) -> {
-                    childSpan.finish();
-                    tracer.scopeManager().activate(parentSpan, false);
-                }));
+        return (CompletableFuture<R>) super.send(command);
     }
 
     @Override
@@ -95,7 +91,6 @@ public class TracingCommandGateway extends DefaultCommandGateway {
                 childSpan.finish();
                 tracer.scopeManager().activate(parentSpan, false);
             });
-
         });
     }
 
