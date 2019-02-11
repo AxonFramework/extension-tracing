@@ -16,6 +16,7 @@
 package org.axonframework.extensions.tracing;
 
 import io.opentracing.propagation.TextMap;
+import org.axonframework.messaging.MetaData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
+ * An implementation of {@link TextMap}, to inject tracing fields with {@link MetaData}
+ *
  * @author Christophe Bouhier
  * @since 4.0
  */

@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
+ * An implementation of {@link TextMap}, to extract tracing fields from {@link MetaData}
+ *
  * @author Christophe Bouhier
  * @since 4.0
  */

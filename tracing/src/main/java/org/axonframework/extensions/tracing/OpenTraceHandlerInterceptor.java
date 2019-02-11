@@ -43,6 +43,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
 
     static final String TAG_AXON_PAYLOAD_TYPE = "axon.payload.type";
     static final String TAG_AXON_ID = "axon.id";
+    static final String TAG_AXON_MSG_TYPE = "axon.message.type" ;
 
     private final Logger LOGGER = LoggerFactory.getLogger(OpenTraceHandlerInterceptor.class);
 
@@ -89,9 +90,8 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
         Class payloadType = message.getPayloadType();
         String messageType = resolveType(message);
 
-//        span.setOperationName(String.format("%s %s", messageType, payloadType.getSimpleName()));
-
         span.setTag(TAG_AXON_ID, message.getIdentifier());
+        span.setTag(TAG_AXON_MSG_TYPE, messageType);
         span.setTag(TAG_AXON_PAYLOAD_TYPE, payloadType.getName());
 
         LOGGER.info("Called: {}", message);

@@ -6,7 +6,6 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MetaData;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,7 +22,6 @@ public class TracingProviderTest {
     public void before() {
         mockTracer = new MockTracer();
         ScopeManager scopeManager = mockTracer.scopeManager();
-        System.out.println(scopeManager.active());
     }
 
     @Test
@@ -44,7 +42,7 @@ public class TracingProviderTest {
     }
 
     @Test
-    public void testTracingProviderEmptyTraceContext(){
+    public void testTracingProviderEmptyTraceContext() {
 
         Message message = new GenericMessage<>("payload", MetaData.emptyInstance());
         TracingProvider tracingProvider = new TracingProvider(mockTracer);

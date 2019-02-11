@@ -66,6 +66,7 @@ public class OpenTraceHandlerInterceptorTest {
 
         assertThat(mockSpan.operationName(), is("Extracting"));
         assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_ID), is(message.getIdentifier()));
+        assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_MSG_TYPE), is("Message"));
         assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_PAYLOAD_TYPE), is("java.lang.String"));
 
         assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));

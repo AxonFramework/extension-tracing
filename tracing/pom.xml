@@ -52,16 +52,6 @@
             <scope>test</scope>
         </dependency>
 
-
-
-        <!-- THIS IS THE FULL FLEDGE STARTER WITH JAEGER WIRING -->
-        <!--<dependency>-->
-            <!--<groupId>io.opentracing.contrib</groupId>-->
-            <!--<artifactId>opentracing-spring-jaeger-cloud-starter</artifactId>-->
-            <!--<version>${opentracing.jaeger.version}</version>-->
-            <!--<optional>true</optional>-->
-        <!--</dependency>-->
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
