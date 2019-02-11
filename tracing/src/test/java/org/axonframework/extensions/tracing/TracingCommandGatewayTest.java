@@ -69,7 +69,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("command"));
+        assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
     }
 
     @SuppressWarnings("unchecked")
@@ -101,7 +101,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("command"));
+        assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
 
     }
 
@@ -133,7 +133,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("command"));
+        assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
 
     }
 

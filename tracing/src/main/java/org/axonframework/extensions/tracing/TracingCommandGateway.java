@@ -51,7 +51,7 @@ public class TracingCommandGateway extends DefaultCommandGateway {
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
 
-        sendWithSpan(tracer, (tracer, parentSpan, childSpan) -> {
+        sendWithSpan(tracer, command.getClass().getName(), (tracer, parentSpan, childSpan) -> {
             super.send(command, callback);
             childSpan.finish();
             tracer.scopeManager().activate(parentSpan, false);
@@ -85,7 +85,7 @@ public class TracingCommandGateway extends DefaultCommandGateway {
     }
 
     private <R> void sendAndRestoreParentSpan(Object command, FutureCallback<Object, R> futureCallback) {
-        sendWithSpan(tracer, (tracer, parentSpan, childSpan) -> {
+        sendWithSpan(tracer, command.getClass().getName(), (tracer, parentSpan, childSpan) -> {
             super.send(command, futureCallback);
             futureCallback.whenComplete((r, e) -> {
                 childSpan.finish();
@@ -105,19 +105,11 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         }
     }
 
-    private void sendWithSpan(Tracer tracer, SpanConsumer consumer) {
+    private void sendWithSpan(Tracer tracer, String operationName, SpanConsumer consumer) {
         Span parent = tracer.activeSpan();
-        try (Scope scope = tracer.buildSpan("command").startActive(false)) {
+        try (Scope scope = tracer.buildSpan(operationName).startActive(false)) {
             Span span = scope.span();
             consumer.accept(tracer, parent, span);
-        }
-    }
-
-    private <R> R sendWithSpan(Tracer tracer, SpanFunction<R> function) {
-        Span parent = tracer.activeSpan();
-        try (Scope scope = tracer.buildSpan("command").startActive(false)) {
-            Span span = scope.span();
-            return function.accept(tracer, parent, span);
         }
     }
 
