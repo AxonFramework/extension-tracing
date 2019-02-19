@@ -7,9 +7,7 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,12 +16,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.axonframework.commandhandling.GenericCommandResultMessage.asCommandResultMessage;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
 public class TracingCommandGatewayTest {
-
 
     private CommandBus mockCommandBus;
     private MockTracer mockTracer;
@@ -35,18 +32,19 @@ public class TracingCommandGatewayTest {
         mockCommandBus = mock(CommandBus.class);
         mockTracer = new MockTracer();
 
-        DefaultCommandGateway.Builder builder = DefaultCommandGateway.builder().commandBus(mockCommandBus);
-        testSubject = new TracingCommandGateway(builder, mockTracer);
+        testSubject = TracingCommandGateway.builder()
+                                           .commandBus(mockCommandBus)
+                                           .tracer(mockTracer)
+                                           .build();
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testSendWithCallback() {
-
         doAnswer(invocation -> {
             ((CommandCallback) invocation.getArguments()[1])
                     .onResult((CommandMessage) invocation.getArguments()[0],
-                            asCommandResultMessage("result"));
+                              asCommandResultMessage("result"));
             return null;
         }).when(mockCommandBus).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
@@ -75,11 +73,10 @@ public class TracingCommandGatewayTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testSendWithoutCallback() throws ExecutionException, InterruptedException {
-
         doAnswer(invocation -> {
             ((CommandCallback) invocation.getArguments()[1])
                     .onResult((CommandMessage) invocation.getArguments()[0],
-                            asCommandResultMessage("result"));
+                              asCommandResultMessage("result"));
             return null;
         }).when(mockCommandBus).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
@@ -102,17 +99,15 @@ public class TracingCommandGatewayTest {
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
         assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
-
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testSendAndWait() {
-
         doAnswer(invocation -> {
             ((CommandCallback) invocation.getArguments()[1])
                     .onResult((CommandMessage) invocation.getArguments()[0],
-                            asCommandResultMessage("result"));
+                              asCommandResultMessage("result"));
             return null;
         }).when(mockCommandBus).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
@@ -134,13 +129,11 @@ public class TracingCommandGatewayTest {
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
         assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
-
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testSendAndWaitWithTimeout() {
-
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         scopeManager.activate(span, false);
@@ -158,5 +151,4 @@ public class TracingCommandGatewayTest {
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(0));
     }
-
 }

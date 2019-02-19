@@ -18,14 +18,21 @@ package org.axonframework.extensions.tracing;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
+import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandExecutionException;
+import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.callbacks.FutureCallback;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
+import org.axonframework.commandhandling.gateway.RetryScheduler;
+import org.axonframework.messaging.MessageDispatchInterceptor;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.axonframework.common.BuilderUtils.assertNonNull;
 
 /**
  * A tracing command gateway which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
@@ -37,9 +44,21 @@ public class TracingCommandGateway extends DefaultCommandGateway {
 
     private final Tracer tracer;
 
-    public TracingCommandGateway(Builder builder, Tracer tracer) {
+    /**
+     * Instantiate a Builder to be able to create a {@link TracingCommandGateway}.
+     * <p>
+     * The {@code dispatchInterceptors} are defaulted to an empty list.
+     * The {@link Tracer} and {@link CommandBus} are <b>hard requirements</b> and as such should be provided.
+     *
+     * @return a Builder to be able to create a {@link TracingCommandGateway}
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    private TracingCommandGateway(Builder builder) {
         super(builder);
-        this.tracer = tracer;
+        this.tracer = builder.tracer;
     }
 
     @SuppressWarnings("unchecked")
@@ -113,8 +132,66 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         }
     }
 
+    /**
+     * Builder class to instantiate a {@link TracingCommandGateway}.
+     * <p>
+     * The {@code dispatchInterceptors} are defaulted to an empty list.
+     * The {@link Tracer} and {@link CommandBus} are <b>hard requirements</b> and as such should be provided.
+     */
+    public static class Builder extends DefaultCommandGateway.Builder {
+
+        private Tracer tracer;
+
+        @Override
+        public Builder commandBus(CommandBus commandBus) {
+            super.commandBus(commandBus);
+            return this;
+        }
+
+        @Override
+        public Builder retryScheduler(RetryScheduler retryScheduler) {
+            super.retryScheduler(retryScheduler);
+            return this;
+        }
+
+        @Override
+        public Builder dispatchInterceptors(
+                MessageDispatchInterceptor<? super CommandMessage<?>>... dispatchInterceptors) {
+            super.dispatchInterceptors(dispatchInterceptors);
+            return this;
+        }
+
+        @Override
+        public Builder dispatchInterceptors(
+                List<MessageDispatchInterceptor<? super CommandMessage<?>>> dispatchInterceptors) {
+            super.dispatchInterceptors(dispatchInterceptors);
+            return this;
+        }
+
+        /**
+         * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link CommandMessage}s.
+         *
+         * @param tracer a {@link Tracer} used to set a {@link Span} on dispatched {@link CommandMessage}s.
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder tracer(Tracer tracer) {
+            assertNonNull(tracer, "Tracer may not be null");
+            this.tracer = tracer;
+            return this;
+        }
+
+        /**
+         * Initializes a {@link TracingCommandGateway} as specified through this Builder.
+         *
+         * @return a {@link TracingCommandGateway} as specified through this Builder
+         */
+        public TracingCommandGateway build() {
+            return new TracingCommandGateway(this);
+        }
+    }
+
     @FunctionalInterface
-    public interface SpanConsumer {
+    private interface SpanConsumer {
 
         void accept(Tracer tracer, Span activeSpan, Span parentSpan);
     }

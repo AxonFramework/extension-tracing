@@ -18,20 +18,19 @@ package org.axonframework.extensions.tracing.autoconfig;
 import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
-import org.axonframework.config.EventProcessingConfiguration;
 import org.axonframework.config.EventProcessingConfigurer;
-import org.axonframework.extensions.tracing.*;
+import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
+import org.axonframework.extensions.tracing.OpenTraceHandlerInterceptor;
+import org.axonframework.extensions.tracing.TracingCommandGateway;
+import org.axonframework.extensions.tracing.TracingProvider;
+import org.axonframework.extensions.tracing.TracingQueryGateway;
 import org.axonframework.messaging.correlation.CorrelationDataProvider;
-import org.axonframework.messaging.correlation.MessageOriginProvider;
-import org.axonframework.queryhandling.DefaultQueryGateway;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.springboot.autoconfig.EventProcessingAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -59,27 +58,30 @@ public class TracingAutoConfiguration {
 
     @Bean
     @Primary
-    public QueryGateway queryGateway(QueryBus queryBus, OpenTraceDispatchInterceptor openTraceDispatchInterceptor, OpenTraceHandlerInterceptor openTraceHandlerInterceptor, Tracer tracer) {
-
+    public QueryGateway queryGateway(QueryBus queryBus,
+                                     OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
+                                     OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
+                                     Tracer tracer) {
         queryBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
-
-        DefaultQueryGateway.Builder builder = DefaultQueryGateway.builder()
-                .queryBus(queryBus)
-                .dispatchInterceptors(openTraceDispatchInterceptor);
-
-        return new TracingQueryGateway(builder, tracer);
+        return TracingQueryGateway.builder()
+                                  .queryBus(queryBus)
+                                  .dispatchInterceptors(openTraceDispatchInterceptor)
+                                  .tracer(tracer)
+                                  .build();
     }
 
     @Bean
     @Primary
-    public CommandGateway commandGateway(CommandBus commandBus, OpenTraceDispatchInterceptor openTraceDispatchInterceptor, OpenTraceHandlerInterceptor openTraceHandlerInterceptor, Tracer tracer) {
-
+    public CommandGateway commandGateway(CommandBus commandBus,
+                                         OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
+                                         OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
+                                         Tracer tracer) {
         commandBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
-
-        DefaultCommandGateway.Builder builder = DefaultCommandGateway.builder()
-                .commandBus(commandBus)
-                .dispatchInterceptors(openTraceDispatchInterceptor);
-        return new TracingCommandGateway(builder, tracer);
+        return TracingCommandGateway.builder()
+                                    .commandBus(commandBus)
+                                    .dispatchInterceptors(openTraceDispatchInterceptor)
+                                    .tracer(tracer)
+                                    .build();
     }
 
     @Bean
@@ -87,10 +89,11 @@ public class TracingAutoConfiguration {
         return new TracingProvider(tracer);
     }
 
-
     @Autowired
-    public void configureEventHandler(EventProcessingConfigurer config, OpenTraceHandlerInterceptor openTraceHandlerInterceptor){
-        config.registerDefaultHandlerInterceptor((configuration, name) -> openTraceHandlerInterceptor);
+    public void configureEventHandler(EventProcessingConfigurer eventProcessingConfigurer,
+                                      OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
+        eventProcessingConfigurer.registerDefaultHandlerInterceptor(
+                (configuration, name) -> openTraceHandlerInterceptor
+        );
     }
-
 }
