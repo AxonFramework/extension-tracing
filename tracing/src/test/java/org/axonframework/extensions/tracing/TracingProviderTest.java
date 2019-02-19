@@ -6,13 +6,12 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MetaData;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class TracingProviderTest {
 
@@ -21,12 +20,10 @@ public class TracingProviderTest {
     @Before
     public void before() {
         mockTracer = new MockTracer();
-        ScopeManager scopeManager = mockTracer.scopeManager();
     }
 
     @Test
     public void testTracingProvider() {
-
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         scopeManager.activate(span, true);
@@ -43,11 +40,9 @@ public class TracingProviderTest {
 
     @Test
     public void testTracingProviderEmptyTraceContext() {
-
         Message message = new GenericMessage<>("payload", MetaData.emptyInstance());
         TracingProvider tracingProvider = new TracingProvider(mockTracer);
         Map<String, ?> correlated = tracingProvider.correlationDataFor(message);
         assertThat(correlated.isEmpty(), is(true));
     }
-
 }

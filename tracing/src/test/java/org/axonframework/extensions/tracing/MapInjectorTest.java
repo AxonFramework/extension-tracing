@@ -1,15 +1,12 @@
 package org.axonframework.extensions.tracing;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.*;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
-@RunWith(JUnit4.class)
 public class MapInjectorTest {
 
     @Test

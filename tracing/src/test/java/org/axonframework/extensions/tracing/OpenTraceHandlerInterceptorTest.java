@@ -8,20 +8,15 @@ import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.unitofwork.DefaultUnitOfWork;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.*;
 
 import java.util.HashMap;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
 public class OpenTraceHandlerInterceptorTest {
 
     private MockTracer mockTracer;
@@ -31,16 +26,19 @@ public class OpenTraceHandlerInterceptorTest {
 
     @Before
     public void before() {
-
         mockTracer = new MockTracer();
         openTraceDispatchInterceptor = new OpenTraceHandlerInterceptor(mockTracer);
         mockInterceptorChain = mock(InterceptorChain.class);
         unitOfWork = new DefaultUnitOfWork<>(null);
     }
 
+    @After
+    public void after() {
+        mockTracer.scopeManager().active().close();
+    }
+
     @Test
     public void testHandle() throws Exception {
-
         MockSpan test = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         scopeManager.activate(test, true);
@@ -70,10 +68,5 @@ public class OpenTraceHandlerInterceptorTest {
         assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_PAYLOAD_TYPE), is("java.lang.String"));
 
         assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));
-    }
-
-    @After
-    public void after(){
-        mockTracer.scopeManager().active().close();
     }
 }
