@@ -25,30 +25,37 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * An implementation of {@link TextMap}, to inject tracing fields with {@link MetaData}
+ * An implementation of {@link TextMap}, to inject tracing fields with {@link MetaData}.
  *
  * @author Christophe Bouhier
  * @since 4.0
  */
 public class MapInjector implements TextMap {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MapInjector.class);
+    private static final Logger logger = LoggerFactory.getLogger(MapInjector.class);
 
     private Map<String, String> metaData = new HashMap<>();
 
     @Override
     public Iterator<Map.Entry<String, String>> iterator() {
-        throw new UnsupportedOperationException("iterator should never be used with Tracer.inject()");
+        throw new UnsupportedOperationException("The iterator() method should never be used with Tracer.inject()");
     }
 
     @Override
     public void put(String key, String value) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Injecting tracing property key: {} , value: {}", key, value);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Injecting tracing property key [{}] with value [{}]", key, value);
         }
         metaData.put(key, value);
     }
 
+    /**
+     * Retrieve a {@link Map} of {@link String} to String of all the injected tracing fields used as input for
+     * {@link MetaData}.
+     *
+     * @return a {@link Map} of {@link String} to String  of all the injected tracing fields used as input for
+     * {@link MetaData}
+     */
     public Map<String, String> getMetaData() {
         return metaData;
     }

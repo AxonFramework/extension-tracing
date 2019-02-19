@@ -115,11 +115,7 @@ public class TracingCommandGateway extends DefaultCommandGateway {
 
     @FunctionalInterface
     public interface SpanConsumer {
-        void accept(Tracer tracer, Span activeSpan, Span parentSpan);
-    }
 
-    @FunctionalInterface
-    public interface SpanFunction<R> {
-        R accept(Tracer tracer, Span activeSpan, Span parentSpan);
+        void accept(Tracer tracer, Span activeSpan, Span parentSpan);
     }
 }

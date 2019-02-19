@@ -41,27 +41,31 @@ import org.slf4j.LoggerFactory;
  */
 public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Message<?>> {
 
+    private final Logger logger = LoggerFactory.getLogger(OpenTraceHandlerInterceptor.class);
+
     static final String TAG_AXON_PAYLOAD_TYPE = "axon.payload.type";
     static final String TAG_AXON_ID = "axon.id";
-    static final String TAG_AXON_MSG_TYPE = "axon.message.type" ;
-
-    private final Logger LOGGER = LoggerFactory.getLogger(OpenTraceHandlerInterceptor.class);
+    static final String TAG_AXON_MSG_TYPE = "axon.message.type";
 
     private final Tracer tracer;
 
+    /**
+     * Initialize a {@link MessageHandlerInterceptor} implementation which uses the provided {@link Tracer} to map span
+     * information from the {@link Message} its {@link MetaData} on a {@link SpanContext}.
+     *
+     * @param tracer the {@link Tracer} used to set a {@link SpanContext} on from a {@link Message}'s {@link MetaData}
+     */
     public OpenTraceHandlerInterceptor(Tracer tracer) {
         this.tracer = tracer;
     }
 
     @Override
     public Object handle(UnitOfWork unitOfWork, InterceptorChain interceptorChain) throws Exception {
-
         MetaData metaData = unitOfWork.getMessage().getMetaData();
 
         String operationName = "Extracting";
         Tracer.SpanBuilder spanBuilder;
         try {
-
             MapExtractor extractor = new MapExtractor(metaData);
             SpanContext parentSpan = tracer.extract(Format.Builtin.TEXT_MAP, extractor);
 
@@ -76,9 +80,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
 
         try (Scope scope = spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(false)) {
             //noinspection unchecked
-            unitOfWork.onCleanup(u -> {
-                scope.span().finish();
-            });
+            unitOfWork.onCleanup(u -> scope.span().finish());
 
             handleMessage(scope.span(), unitOfWork.getMessage());
             return interceptorChain.proceed();
@@ -86,7 +88,6 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
     }
 
     private void handleMessage(Span span, Message message) {
-
         Class payloadType = message.getPayloadType();
         String messageType = resolveType(message);
 
@@ -94,7 +95,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
         span.setTag(TAG_AXON_MSG_TYPE, messageType);
         span.setTag(TAG_AXON_PAYLOAD_TYPE, payloadType.getName());
 
-        LOGGER.info("Called: {}", message);
+        logger.info("Called: {}", message);
     }
 
     private String resolveType(Message message) {

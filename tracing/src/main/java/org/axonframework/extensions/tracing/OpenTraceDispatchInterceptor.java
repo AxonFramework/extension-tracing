@@ -15,7 +15,11 @@
  */
 package org.axonframework.extensions.tracing;
 
-import io.opentracing.*;
+import io.opentracing.Scope;
+import io.opentracing.ScopeManager;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MessageDispatchInterceptor;
@@ -25,7 +29,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 /**
- * A {@link MessageDispatchInterceptor} which maps the {@link SpanContext} to {@link org.axonframework.messaging.MetaData}
+ * A {@link MessageDispatchInterceptor} which maps the {@link SpanContext} to
+ * {@link org.axonframework.messaging.MetaData}.
  *
  * @author Christophe Bouhier
  * @since 4.0
@@ -34,19 +39,23 @@ public class OpenTraceDispatchInterceptor implements MessageDispatchInterceptor<
 
     private final Tracer tracer;
 
+    /**
+     * Initialize a {@link MessageDispatchInterceptor} implementation which uses the provided {@link Tracer} to map a
+     * {@link SpanContext} on an ingested {@link Message}.
+     *
+     * @param tracer the {@link Tracer} used to set a {@link SpanContext} on {@link Message}s
+     */
     public OpenTraceDispatchInterceptor(Tracer tracer) {
         this.tracer = tracer;
     }
 
     @Override
     public BiFunction<Integer, Message<?>, Message<?>> handle(List<? extends Message<?>> messages) {
-
-
         ScopeManager scopeManager = tracer.scopeManager();
         Optional<SpanContext> spanContextOptional = Optional.ofNullable(scopeManager)
-                .map(ScopeManager::active)
-                .map(Scope::span)
-                .map(Span::context);
+                                                            .map(ScopeManager::active)
+                                                            .map(Scope::span)
+                                                            .map(Span::context);
 
         return spanContextOptional.<BiFunction<Integer, Message<?>, Message<?>>>map(spanContext -> (index, message) -> {
             MapInjector injector = new MapInjector();
