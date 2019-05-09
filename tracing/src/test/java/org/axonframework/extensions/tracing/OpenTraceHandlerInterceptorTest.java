@@ -8,14 +8,16 @@ import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.unitofwork.DefaultUnitOfWork;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class OpenTraceHandlerInterceptorTest {
 
@@ -62,10 +64,10 @@ public class OpenTraceHandlerInterceptorTest {
         assertThat(mockSpan.parentId(), is(1L));
         assertThat(mockSpan.context().traceId(), is(2L));
 
-        assertThat(mockSpan.operationName(), is("Extracting"));
-        assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_ID), is(message.getIdentifier()));
-        assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_MSG_TYPE), is("Message"));
-        assertThat(mockSpan.tags().get(OpenTraceHandlerInterceptor.TAG_AXON_PAYLOAD_TYPE), is("java.lang.String"));
+        assertThat(mockSpan.operationName(), is("handleMessage"));
+        assertThat(mockSpan.tags().get("axon.message.id"), is(message.getIdentifier()));
+        assertThat(mockSpan.tags().get("axon.message.type"), is("Message"));
+        assertThat(mockSpan.tags().get("axon.message.payloadtype"), is("java.lang.String"));
 
         assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));
     }

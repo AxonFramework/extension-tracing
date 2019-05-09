@@ -18,11 +18,8 @@ package org.axonframework.extensions.tracing;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
-import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.CommandCallback;
-import org.axonframework.commandhandling.CommandExecutionException;
-import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.commandhandling.CommandResultMessage;
+import io.opentracing.tag.Tags;
+import org.axonframework.commandhandling.*;
 import org.axonframework.commandhandling.callbacks.FutureCallback;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
 import org.axonframework.commandhandling.gateway.RetryScheduler;
@@ -31,18 +28,26 @@ import org.axonframework.messaging.MessageDispatchInterceptor;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
+import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
 
 /**
  * A tracing command gateway which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
  *
  * @author Christophe Bouhier
+ * @author Allard Buijze
  * @since 4.0
  */
 public class TracingCommandGateway extends DefaultCommandGateway {
 
     private final Tracer tracer;
+
+    private TracingCommandGateway(Builder builder) {
+        super(builder);
+        this.tracer = builder.tracer;
+    }
 
     /**
      * Instantiate a Builder to be able to create a {@link TracingCommandGateway}.
@@ -56,47 +61,40 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         return new Builder();
     }
 
-    private TracingCommandGateway(Builder builder) {
-        super(builder);
-        this.tracer = builder.tracer;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <R> CompletableFuture<R> send(Object command) {
-        return (CompletableFuture<R>) super.send(command);
-    }
-
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
-
-        sendWithSpan(tracer, command.getClass().getName(), (tracer, parentSpan, childSpan) -> {
-            super.send(command, callback);
-            childSpan.finish();
-            tracer.scopeManager().activate(parentSpan, false);
+        CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
+        sendWithSpan(tracer, "sendCommandMessage", cmd, (tracer, parentSpan, childSpan) -> {
+            CompletableFuture<?> resultReceived = new CompletableFuture<>();
+            super.send(command, (CommandCallback<C, R>) (commandMessage, commandResultMessage) -> {
+                try (Scope ignored = tracer.scopeManager().activate(parentSpan, false)) {
+                    childSpan.log("resultReceived");
+                    callback.onResult(commandMessage, commandResultMessage);
+                    childSpan.log("afterCallbackInvocation");
+                } finally {
+                    resultReceived.complete(null);
+                }
+            });
+            childSpan.log("dispatchComplete");
+            resultReceived.thenRun(childSpan::finish);
         });
     }
 
     @Override
     public <R> R sendAndWait(Object command) {
-
-        FutureCallback<Object, R> futureCallback = new FutureCallback<>();
-
-        sendAndRestoreParentSpan(command, futureCallback);
-        CommandResultMessage<? extends R> commandResultMessage = futureCallback.getResult();
-        if (commandResultMessage.isExceptional()) {
-            throw asRuntime(commandResultMessage.exceptionResult());
-        }
-        return commandResultMessage.getPayload();
+        return doSendAndExtract(command, FutureCallback::getResult);
     }
 
     @Override
     public <R> R sendAndWait(Object command, long timeout, TimeUnit unit) {
+        return doSendAndExtract(command, f -> f.getResult(timeout, unit));
+    }
 
+    private <R> R doSendAndExtract(Object command, Function<FutureCallback<Object, R>, CommandResultMessage<? extends R>> resultExtractor) {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         sendAndRestoreParentSpan(command, futureCallback);
-        CommandResultMessage<? extends R> commandResultMessage = futureCallback.getResult(timeout, unit);
+        CommandResultMessage<? extends R> commandResultMessage = resultExtractor.apply(futureCallback);
         if (commandResultMessage.isExceptional()) {
             throw asRuntime(commandResultMessage.exceptionResult());
         }
@@ -104,12 +102,13 @@ public class TracingCommandGateway extends DefaultCommandGateway {
     }
 
     private <R> void sendAndRestoreParentSpan(Object command, FutureCallback<Object, R> futureCallback) {
-        sendWithSpan(tracer, command.getClass().getName(), (tracer, parentSpan, childSpan) -> {
-            super.send(command, futureCallback);
-            futureCallback.whenComplete((r, e) -> {
-                childSpan.finish();
-                tracer.scopeManager().activate(parentSpan, false);
-            });
+        CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
+        sendWithSpan(tracer, "sendCommandMessageAndWait", cmd, (tracer, parentSpan, childSpan) -> {
+            super.send(cmd, futureCallback);
+            futureCallback.thenRun(() -> childSpan.log("resultReceived"));
+
+            childSpan.log("dispatchComplete");
+            futureCallback.thenRun(childSpan::finish);
         });
     }
 
@@ -124,12 +123,20 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         }
     }
 
-    private void sendWithSpan(Tracer tracer, String operationName, SpanConsumer consumer) {
+    private void sendWithSpan(Tracer tracer, String operation, CommandMessage<?> command, SpanConsumer consumer) {
         Span parent = tracer.activeSpan();
-        try (Scope scope = tracer.buildSpan(operationName).startActive(false)) {
-            Span span = scope.span();
-            consumer.accept(tracer, parent, span);
+        Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
+                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
+        try (Scope scope = spanBuilder.startActive(false)) {
+            consumer.accept(tracer, parent, scope.span());
         }
+        tracer.scopeManager().activate(parent, false);
+    }
+
+    @FunctionalInterface
+    private interface SpanConsumer {
+
+        void accept(Tracer tracer, Span activeSpan, Span parentSpan);
     }
 
     /**
@@ -188,11 +195,5 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         public TracingCommandGateway build() {
             return new TracingCommandGateway(this);
         }
-    }
-
-    @FunctionalInterface
-    private interface SpanConsumer {
-
-        void accept(Tracer tracer, Span activeSpan, Span parentSpan);
     }
 }

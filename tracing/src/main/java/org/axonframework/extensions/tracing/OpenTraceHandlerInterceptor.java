@@ -16,21 +16,17 @@
 package org.axonframework.extensions.tracing;
 
 import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
-import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MessageHandlerInterceptor;
 import org.axonframework.messaging.MetaData;
 import org.axonframework.messaging.unitofwork.UnitOfWork;
-import org.axonframework.queryhandling.QueryMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
 
 
 /**
@@ -40,12 +36,6 @@ import org.slf4j.LoggerFactory;
  * @since 4.0
  */
 public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Message<?>> {
-
-    private final Logger logger = LoggerFactory.getLogger(OpenTraceHandlerInterceptor.class);
-
-    static final String TAG_AXON_PAYLOAD_TYPE = "axon.payload.type";
-    static final String TAG_AXON_ID = "axon.id";
-    static final String TAG_AXON_MSG_TYPE = "axon.message.type";
 
     private final Tracer tracer;
 
@@ -63,7 +53,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
     public Object handle(UnitOfWork unitOfWork, InterceptorChain interceptorChain) throws Exception {
         MetaData metaData = unitOfWork.getMessage().getMetaData();
 
-        String operationName = "Extracting";
+        String operationName = "handle" + SpanUtils.resolveType(unitOfWork.getMessage());
         Tracer.SpanBuilder spanBuilder;
         try {
             MapExtractor extractor = new MapExtractor(metaData);
@@ -78,35 +68,11 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
             spanBuilder = tracer.buildSpan(operationName);
         }
 
-        try (Scope scope = spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(false)) {
+        try (Scope scope = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(false)) {
             //noinspection unchecked
             unitOfWork.onCleanup(u -> scope.span().finish());
-
-            handleMessage(scope.span(), unitOfWork.getMessage());
             return interceptorChain.proceed();
         }
     }
 
-    private void handleMessage(Span span, Message message) {
-        Class payloadType = message.getPayloadType();
-        String messageType = resolveType(message);
-
-        span.setTag(TAG_AXON_ID, message.getIdentifier());
-        span.setTag(TAG_AXON_MSG_TYPE, messageType);
-        span.setTag(TAG_AXON_PAYLOAD_TYPE, payloadType.getName());
-
-        logger.info("Called: {}", message);
-    }
-
-    private String resolveType(Message message) {
-        Class<?> clazz = Message.class;
-        if (message instanceof QueryMessage) {
-            clazz = QueryMessage.class;
-        } else if (message instanceof CommandMessage) {
-            clazz = CommandMessage.class;
-        } else if (message instanceof EventMessage) {
-            clazz = EventMessage.class;
-        }
-        return clazz.getSimpleName();
-    }
 }

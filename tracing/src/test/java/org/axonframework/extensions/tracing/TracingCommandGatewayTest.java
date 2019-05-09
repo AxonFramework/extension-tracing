@@ -7,7 +7,8 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.axonframework.commandhandling.GenericCommandResultMessage.asCommandResultMessage;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
@@ -67,7 +68,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
+        assertThat(mockSpans.get(0).operationName(), is("sendCommandMessage"));
     }
 
     @SuppressWarnings("unchecked")
@@ -98,7 +99,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
+        assertThat(mockSpans.get(0).operationName(), is("sendCommandMessage"));
     }
 
     @SuppressWarnings("unchecked")
@@ -128,7 +129,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("java.lang.String"));
+        assertThat(mockSpans.get(0).operationName(), is("sendCommandMessageAndWait"));
     }
 
     @SuppressWarnings("unchecked")
