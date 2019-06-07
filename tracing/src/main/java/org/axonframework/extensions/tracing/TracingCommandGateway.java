@@ -19,10 +19,16 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
-import org.axonframework.commandhandling.*;
+import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.commandhandling.CommandCallback;
+import org.axonframework.commandhandling.CommandExecutionException;
+import org.axonframework.commandhandling.CommandMessage;
+import org.axonframework.commandhandling.CommandResultMessage;
+import org.axonframework.commandhandling.GenericCommandMessage;
 import org.axonframework.commandhandling.callbacks.FutureCallback;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
 import org.axonframework.commandhandling.gateway.RetryScheduler;
+import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 
 import java.util.List;
@@ -38,13 +44,22 @@ import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
  *
  * @author Christophe Bouhier
  * @author Allard Buijze
+ * @author Steven van Beelen
  * @since 4.0
  */
 public class TracingCommandGateway extends DefaultCommandGateway {
 
     private final Tracer tracer;
 
-    private TracingCommandGateway(Builder builder) {
+    /**
+     * Instantiate a {@link TracingCommandGateway} based on the fields contained in the {@link Builder}.
+     * <p>
+     * Will assert that the {@link CommandBus} and {@link Tracer} are not {@code null}, and will throw an
+     * {@link AxonConfigurationException} if they are.
+     *
+     * @param builder the {@link Builder} used to instantiate a {@link TracingCommandGateway} instance
+     */
+    protected TracingCommandGateway(Builder builder) {
         super(builder);
         this.tracer = builder.tracer;
     }
@@ -90,7 +105,8 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         return doSendAndExtract(command, f -> f.getResult(timeout, unit));
     }
 
-    private <R> R doSendAndExtract(Object command, Function<FutureCallback<Object, R>, CommandResultMessage<? extends R>> resultExtractor) {
+    private <R> R doSendAndExtract(Object command,
+                                   Function<FutureCallback<Object, R>, CommandResultMessage<? extends R>> resultExtractor) {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         sendAndRestoreParentSpan(command, futureCallback);
@@ -194,6 +210,12 @@ public class TracingCommandGateway extends DefaultCommandGateway {
          */
         public TracingCommandGateway build() {
             return new TracingCommandGateway(this);
+        }
+
+        @Override
+        protected void validate() throws AxonConfigurationException {
+            super.validate();
+            assertNonNull(tracer, "The Tracer is a hard requirement and should be provided");
         }
     }
 }

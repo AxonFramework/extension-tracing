@@ -18,6 +18,7 @@ package org.axonframework.extensions.tracing;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
+import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.responsetypes.ResponseType;
 import org.axonframework.queryhandling.DefaultQueryGateway;
@@ -33,6 +34,7 @@ import static org.axonframework.common.BuilderUtils.assertNonNull;
  * A tracing query gateway which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
  *
  * @author Christophe Bouhier
+ * @author Steven van Beelen
  * @since 4.0
  */
 public class TracingQueryGateway extends DefaultQueryGateway {
@@ -51,7 +53,15 @@ public class TracingQueryGateway extends DefaultQueryGateway {
         return new Builder();
     }
 
-    private TracingQueryGateway(Builder builder) {
+    /**
+     * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
+     * <p>
+     * Will assert that the {@link QueryBus} and {@link Tracer} are not {@code null}, and will throw an
+     * {@link AxonConfigurationException} if they are.
+     *
+     * @param builder the {@link Builder} used to instantiate a {@link TracingQueryGateway} instance
+     */
+    protected TracingQueryGateway(Builder builder) {
         super(builder);
         this.tracer = builder.tracer;
     }
@@ -117,6 +127,12 @@ public class TracingQueryGateway extends DefaultQueryGateway {
          */
         public TracingQueryGateway build() {
             return new TracingQueryGateway(this);
+        }
+
+        @Override
+        protected void validate() throws AxonConfigurationException {
+            super.validate();
+            assertNonNull(tracer, "The Tracer is a hard requirement and should be provided");
         }
     }
 }
