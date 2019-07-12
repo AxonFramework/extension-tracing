@@ -49,11 +49,9 @@ public class TracingCommandGatewayTest {
             return null;
         }).when(mockCommandBus).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
-
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         scopeManager.activate(span, false);
-
 
         testSubject.send("Command", (m, r) -> {
             // Call back.
@@ -69,6 +67,9 @@ public class TracingCommandGatewayTest {
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
         assertThat(mockSpans.get(0).operationName(), is("sendCommandMessage"));
+
+        mockTracer.scopeManager().active().close();
+        assertThat(mockTracer.scopeManager().active(), nullValue());
     }
 
     @SuppressWarnings("unchecked")
@@ -100,6 +101,9 @@ public class TracingCommandGatewayTest {
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
         assertThat(mockSpans.get(0).operationName(), is("sendCommandMessage"));
+
+        mockTracer.scopeManager().active().close();
+        assertThat(mockTracer.scopeManager().active(), nullValue());
     }
 
     @SuppressWarnings("unchecked")
@@ -123,13 +127,15 @@ public class TracingCommandGatewayTest {
         assertThat(result, instanceOf(String.class));
         assertThat(result, is("result"));
 
-
         Span activeSpan = mockTracer.activeSpan();
         assertThat(activeSpan, is(span));
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
         assertThat(mockSpans.get(0).operationName(), is("sendCommandMessageAndWait"));
+
+        mockTracer.scopeManager().active().close();
+        assertThat(mockTracer.scopeManager().active(), nullValue());
     }
 
     @SuppressWarnings("unchecked")
@@ -151,5 +157,8 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(0));
+
+        mockTracer.scopeManager().active().close();
+        assertThat(mockTracer.scopeManager().active(), nullValue());
     }
 }

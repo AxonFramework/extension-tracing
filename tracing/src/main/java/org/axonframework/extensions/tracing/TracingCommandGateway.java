@@ -19,12 +19,7 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
-import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.CommandCallback;
-import org.axonframework.commandhandling.CommandExecutionException;
-import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.commandhandling.CommandResultMessage;
-import org.axonframework.commandhandling.GenericCommandMessage;
+import org.axonframework.commandhandling.*;
 import org.axonframework.commandhandling.callbacks.FutureCallback;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
 import org.axonframework.commandhandling.gateway.RetryScheduler;
@@ -109,15 +104,6 @@ public class TracingCommandGateway extends DefaultCommandGateway {
                                    Function<FutureCallback<Object, R>, CommandResultMessage<? extends R>> resultExtractor) {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
-        sendAndRestoreParentSpan(command, futureCallback);
-        CommandResultMessage<? extends R> commandResultMessage = resultExtractor.apply(futureCallback);
-        if (commandResultMessage.isExceptional()) {
-            throw asRuntime(commandResultMessage.exceptionResult());
-        }
-        return commandResultMessage.getPayload();
-    }
-
-    private <R> void sendAndRestoreParentSpan(Object command, FutureCallback<Object, R> futureCallback) {
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
         sendWithSpan(tracer, "sendCommandMessageAndWait", cmd, (tracer, parentSpan, childSpan) -> {
             super.send(cmd, futureCallback);
@@ -126,6 +112,12 @@ public class TracingCommandGateway extends DefaultCommandGateway {
             childSpan.log("dispatchComplete");
             futureCallback.thenRun(childSpan::finish);
         });
+
+        CommandResultMessage<? extends R> commandResultMessage = resultExtractor.apply(futureCallback);
+        if (commandResultMessage.isExceptional()) {
+            throw asRuntime(commandResultMessage.exceptionResult());
+        }
+        return commandResultMessage.getPayload();
     }
 
     private RuntimeException asRuntime(Throwable e) {
@@ -146,7 +138,6 @@ public class TracingCommandGateway extends DefaultCommandGateway {
         try (Scope scope = spanBuilder.startActive(false)) {
             consumer.accept(tracer, parent, scope.span());
         }
-        tracer.scopeManager().activate(parent, false);
     }
 
     @FunctionalInterface
