@@ -39,6 +39,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto configure a tracing capabilities.
  *
  * @author Christophe Bouhier
+ * @author Steven van Beelen
  * @since 4.0
  */
 @Configuration
@@ -58,30 +59,32 @@ public class TracingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public QueryGateway queryGateway(QueryBus queryBus,
+    public QueryGateway queryGateway(Tracer tracer,
+                                     QueryBus queryBus,
                                      OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
-                                     OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
-                                     Tracer tracer) {
+                                     OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
         queryBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
-        return TracingQueryGateway.builder()
-                                  .queryBus(queryBus)
-                                  .dispatchInterceptors(openTraceDispatchInterceptor)
-                                  .tracer(tracer)
-                                  .build();
+        TracingQueryGateway tracingQueryGateway = TracingQueryGateway.builder()
+                                                                     .delegateQueryBus(queryBus)
+                                                                     .tracer(tracer)
+                                                                     .build();
+        tracingQueryGateway.registerDispatchInterceptor(openTraceDispatchInterceptor);
+        return tracingQueryGateway;
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandGateway commandGateway(CommandBus commandBus,
+    public CommandGateway commandGateway(Tracer tracer,
+                                         CommandBus commandBus,
                                          OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
-                                         OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
-                                         Tracer tracer) {
+                                         OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
         commandBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
-        return TracingCommandGateway.builder()
-                                    .commandBus(commandBus)
-                                    .dispatchInterceptors(openTraceDispatchInterceptor)
-                                    .tracer(tracer)
-                                    .build();
+        TracingCommandGateway tracingCommandGateway = TracingCommandGateway.builder()
+                                                                           .tracer(tracer)
+                                                                           .delegateCommandBus(commandBus)
+                                                                           .build();
+        tracingCommandGateway.registerDispatchInterceptor(openTraceDispatchInterceptor);
+        return tracingCommandGateway;
     }
 
     @Bean
