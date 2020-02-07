@@ -16,6 +16,7 @@
 package org.axonframework.extensions.tracing;
 
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
@@ -68,9 +69,10 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
             spanBuilder = tracer.buildSpan(operationName);
         }
 
-        try (Scope scope = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(false)) {
+        final Span span = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).start();
+        try (Scope scope = tracer.activateSpan(span)) {
             //noinspection unchecked
-            unitOfWork.onCleanup(u -> scope.span().finish());
+            unitOfWork.onCleanup(u -> span.finish());
             return interceptorChain.proceed();
         }
     }

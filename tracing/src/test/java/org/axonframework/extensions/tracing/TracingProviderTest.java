@@ -1,17 +1,19 @@
 package org.axonframework.extensions.tracing;
 
+import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
 import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MetaData;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class TracingProviderTest {
 
@@ -26,16 +28,17 @@ public class TracingProviderTest {
     public void testTracingProvider() {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
-        scopeManager.activate(span, true);
+        try (final Scope ignored = scopeManager.activate(span)) {
 
-        Message message = new GenericMessage<>("payload", MetaData.emptyInstance());
+            Message message = new GenericMessage<>("payload", MetaData.emptyInstance());
 
-        TracingProvider tracingProvider = new TracingProvider(mockTracer);
+            TracingProvider tracingProvider = new TracingProvider(mockTracer);
 
-        Map<String, ?> correlated = tracingProvider.correlationDataFor(message);
+            Map<String, ?> correlated = tracingProvider.correlationDataFor(message);
 
-        assertThat(correlated.get("spanid"), is(Long.valueOf(span.context().spanId()).toString()));
-        assertThat(correlated.get("traceid"), is(Long.valueOf(span.context().traceId()).toString()));
+            assertThat(correlated.get("spanid"), is(Long.valueOf(span.context().spanId()).toString()));
+            assertThat(correlated.get("traceid"), is(Long.valueOf(span.context().traceId()).toString()));
+        }
     }
 
     @Test
