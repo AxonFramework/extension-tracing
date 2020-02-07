@@ -70,7 +70,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
         }
 
         final Span span = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).start();
-        try (Scope scope = tracer.activateSpan(span)) {
+        try (Scope ignored = tracer.activateSpan(span)) {
             //noinspection unchecked
             unitOfWork.onCleanup(u -> span.finish());
             return interceptorChain.proceed();
