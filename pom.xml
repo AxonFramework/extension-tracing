@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2010-2018. Axon Framework
+  ~ Copyright (c) 2010-2020. Axon Framework
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
   ~ You may obtain a copy of the License at
   ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~    http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing, software
   ~ distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,13 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <groupId>org.axonframework.extensions.tracing</groupId>
     <artifactId>axon-tracing-parent</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.2-SNAPSHOT</version>
     <modules>
         <module>tracing</module>
         <module>tracing-spring-boot-autoconfigure</module>
@@ -108,14 +110,18 @@
     </profiles>
 
     <properties>
-        <axon.version>4.0</axon.version>
-        <slf4j.version>1.7.25</slf4j.version>
-        <log4j.version>1.2.17</log4j.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <axon.version>4.2</axon.version>
+        <opentracing.jaeger.version>1.0.1</opentracing.jaeger.version>
+
         <spring.version>5.1.1.RELEASE</spring.version>
         <spring.boot.version>2.0.5.RELEASE</spring.boot.version>
-        <opentracing.jaeger.version>1.0.1</opentracing.jaeger.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mockito.version>2.15.0</mockito.version>
+
+        <slf4j.version>1.7.28</slf4j.version>
+        <log4j.version>2.13.0</log4j.version>
+
+        <mockito.version>3.0.0</mockito.version>
         <jackson.version>2.9.4</jackson.version>
     </properties>
 
@@ -127,6 +133,7 @@
             <version>${spring.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -138,15 +145,10 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
             <scope>test</scope>
         </dependency>
@@ -157,8 +159,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
             <version>${log4j.version}</version>
             <scope>test</scope>
             <exclusions>
@@ -407,14 +415,14 @@
                 <role>Committer</role>
             </roles>
         </developer>
-        <!--</developer>-->
-        <!--<developer>-->
-        <!--<name>Steven van Beelen</name>-->
-        <!--<email>steven.vanbeelen@axoniq.io</email>-->
-        <!--<organization>AxonIQ</organization>-->
-        <!--<organizationUrl>https://axoniq.io</organizationUrl>-->
-        <!--<roles>-->
-        <!--<role>Committer</role>-->
-        <!--</roles>-->
+        <developer>
+            <name>Steven van Beelen</name>
+            <email>steven.vanbeelen@axoniq.io</email>
+            <organization>AxonIQ</organization>
+            <organizationUrl>https://axoniq.io</organizationUrl>
+            <roles>
+                <role>Committer</role>
+            </roles>
+        </developer>
     </developers>
 </project>

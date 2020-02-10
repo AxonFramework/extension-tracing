@@ -19,33 +19,48 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import org.axonframework.common.AxonConfigurationException;
+import org.axonframework.common.Registration;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.responsetypes.ResponseType;
 import org.axonframework.queryhandling.DefaultQueryGateway;
 import org.axonframework.queryhandling.QueryBus;
+import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.queryhandling.QueryMessage;
+import org.axonframework.queryhandling.SubscriptionQueryBackpressure;
+import org.axonframework.queryhandling.SubscriptionQueryResult;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
 
 /**
- * A tracing query gateway which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
+ * A tracing {@link QueryGateway} which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
+ * This implementation is a wrapper and as such delegates the actual dispatching of queries to another QueryGateway.
+ * <p>
+ * Note that this implementation <b>>does not</b> support tracing for calls towards
+ * {@link #scatterGather(String, Object, ResponseType, long, TimeUnit)} and
+ * {@link #subscriptionQuery(String, Object, ResponseType, ResponseType, SubscriptionQueryBackpressure, int)} yet.
  *
  * @author Christophe Bouhier
  * @author Steven van Beelen
  * @since 4.0
  */
-public class TracingQueryGateway extends DefaultQueryGateway {
+public class TracingQueryGateway implements QueryGateway {
 
     private final Tracer tracer;
+    private final QueryGateway delegate;
 
     /**
      * Instantiate a Builder to be able to create a {@link TracingQueryGateway}.
      * <p>
-     * The {@code dispatchInterceptors} are defaulted to an empty list.
-     * The {@link Tracer} and {@link QueryBus} are <b>hard requirements</b> and as such should be provided.
+     * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
+     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}.
+     * A registered QueryGateway will always take precedence over a configured QueryBus.
+     * <p>
+     * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
+     * provided.
      *
      * @return a Builder to be able to create a {@link TracingQueryGateway}
      */
@@ -56,14 +71,15 @@ public class TracingQueryGateway extends DefaultQueryGateway {
     /**
      * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
      * <p>
-     * Will assert that the {@link QueryBus} and {@link Tracer} are not {@code null}, and will throw an
+     * Will assert that the {@link Tracer} and delegate {@link QueryGateway} are not {@code null}, and will throw an
      * {@link AxonConfigurationException} if they are.
      *
      * @param builder the {@link Builder} used to instantiate a {@link TracingQueryGateway} instance
      */
     protected TracingQueryGateway(Builder builder) {
-        super(builder);
+        builder.validate();
         this.tracer = builder.tracer;
+        this.delegate = builder.buildDelegateQueryGateway();
     }
 
     @Override
@@ -71,42 +87,55 @@ public class TracingQueryGateway extends DefaultQueryGateway {
         Span parentSpan = tracer.activeSpan();
         try (Scope scope = tracer.buildSpan(queryName).startActive(false)) {
             Span span = scope.span();
-            return super.query(queryName, query, responseType).whenComplete((r, e) -> {
+            return delegate.query(queryName, query, responseType).whenComplete((r, e) -> {
                 span.finish();
                 tracer.scopeManager().activate(parentSpan, false);
             });
         }
     }
 
+    @Override
+    public <R, Q> Stream<R> scatterGather(String queryName,
+                                          Q query,
+                                          ResponseType<R> responseType,
+                                          long timeout,
+                                          TimeUnit timeUnit) {
+        return delegate.scatterGather(queryName, query, responseType, timeout, timeUnit);
+    }
+
+    @Override
+    public <Q, I, U> SubscriptionQueryResult<I, U> subscriptionQuery(String queryName,
+                                                                     Q query,
+                                                                     ResponseType<I> initialResponseType,
+                                                                     ResponseType<U> updateResponseType,
+                                                                     SubscriptionQueryBackpressure backpressure,
+                                                                     int updateBufferSize) {
+        return delegate.subscriptionQuery(
+                queryName, query, initialResponseType, updateResponseType, backpressure, updateBufferSize
+        );
+    }
+
+    @Override
+    public Registration registerDispatchInterceptor(
+            MessageDispatchInterceptor<? super QueryMessage<?, ?>> dispatchInterceptor) {
+        return delegate.registerDispatchInterceptor(dispatchInterceptor);
+    }
+
     /**
      * Builder class to instantiate a {@link TracingQueryGateway}.
      * <p>
-     * The {@code dispatchInterceptors} are defaulted to an empty list.
-     * The {@link Tracer} and {@link QueryBus} are <b>hard requirements</b> and as such should be provided.
+     * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
+     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}.
+     * A registered QueryGateway will always take precedence over a configured QueryBus.
+     * <p>
+     * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
+     * provided.
      */
-    public static class Builder extends DefaultQueryGateway.Builder {
+    public static class Builder {
 
         private Tracer tracer;
-
-        @Override
-        public Builder queryBus(QueryBus queryBus) {
-            super.queryBus(queryBus);
-            return this;
-        }
-
-        @Override
-        public Builder dispatchInterceptors(
-                MessageDispatchInterceptor<? super QueryMessage<?, ?>>... dispatchInterceptors) {
-            super.dispatchInterceptors(dispatchInterceptors);
-            return this;
-        }
-
-        @Override
-        public Builder dispatchInterceptors(
-                List<MessageDispatchInterceptor<? super QueryMessage<?, ?>>> dispatchInterceptors) {
-            super.dispatchInterceptors(dispatchInterceptors);
-            return this;
-        }
+        private QueryBus delegateBus;
+        private QueryGateway delegateGateway;
 
         /**
          * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link QueryMessage}s.
@@ -121,6 +150,33 @@ public class TracingQueryGateway extends DefaultQueryGateway {
         }
 
         /**
+         * Sets the {@link QueryBus} used to build a {@link DefaultQueryGateway} this tracing-wrapper will delegate
+         * the actual sending of queries towards.
+         *
+         * @param delegateBus the {@link QueryGateway} this tracing-wrapper will delegate the actual sending of
+         *                    queries towards
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder delegateQueryBus(QueryBus delegateBus) {
+            assertNonNull(delegateBus, "Delegate QueryBus may not be null");
+            this.delegateBus = delegateBus;
+            return this;
+        }
+
+        /**
+         * Sets the {@link QueryGateway} this tracing-wrapper will delegate the actual sending of queries towards.
+         *
+         * @param delegateGateway the {@link QueryGateway} this tracing-wrapper will delegate the actual sending of
+         *                        queries towards
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder delegateQueryGateway(QueryGateway delegateGateway) {
+            assertNonNull(delegateGateway, "Delegate QueryGateway may not be null");
+            this.delegateGateway = delegateGateway;
+            return this;
+        }
+
+        /**
          * Initializes a {@link TracingQueryGateway} as specified through this Builder.
          *
          * @return a {@link TracingQueryGateway} as specified through this Builder
@@ -129,10 +185,39 @@ public class TracingQueryGateway extends DefaultQueryGateway {
             return new TracingQueryGateway(this);
         }
 
-        @Override
+        /**
+         * Instantiate the delegate {@link QueryGateway} this tracing-wrapper gateway will uses to actually dispatch
+         * queries.
+         * Will either use the registered {@link QueryBus} (through {@link #delegateQueryBus(QueryBus)}) or a
+         * complete QueryGateway through {@link #delegateQueryGateway(QueryGateway)}.
+         *
+         * @return the delegate {@link QueryGateway} this tracing-wrapper gateway will uses to actually dispatch queries
+         */
+        private QueryGateway buildDelegateQueryGateway() {
+            return delegateGateway != null
+                    ? delegateGateway
+                    : DefaultQueryGateway.builder().queryBus(delegateBus).build();
+        }
+
+        /**
+         * Validate whether the fields contained in this Builder as set accordingly.
+         *
+         * @throws AxonConfigurationException if one field is asserted to be incorrect according to the Builder's
+         *                                    specifications
+         */
         protected void validate() throws AxonConfigurationException {
-            super.validate();
             assertNonNull(tracer, "The Tracer is a hard requirement and should be provided");
+            if (delegateBus == null) {
+                assertNonNull(
+                        delegateGateway, "The delegate QueryGateway is a hard requirement and should be provided"
+                );
+                return;
+            }
+            assertNonNull(
+                    delegateBus,
+                    "The delegate QueryBus is a hard requirement to create a delegate QueryGateway"
+                            + " and should be provided"
+            );
         }
     }
 }

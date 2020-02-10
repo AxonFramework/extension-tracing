@@ -10,7 +10,6 @@ import org.axonframework.queryhandling.QueryMessage;
 import org.axonframework.queryhandling.QueryResponseMessage;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
-import org.mockito.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,8 +17,15 @@ import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test class for the {@link TracingQueryGateway}.
+ *
+ * @author Christophe Bouhier
+ * @author Steven van Beelen
+ */
 public class TracingQueryGatewayTest {
 
     private QueryBus mockQueryBus;
@@ -35,18 +41,18 @@ public class TracingQueryGatewayTest {
         mockTracer = new MockTracer();
 
         testSubject = TracingQueryGateway.builder()
-                                         .queryBus(mockQueryBus)
                                          .tracer(mockTracer)
+                                         .delegateQueryBus(mockQueryBus)
                                          .build();
+
         answer = new GenericQueryResponseMessage<>("answer");
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testQuery() throws ExecutionException, InterruptedException {
-        when(mockQueryBus.query(ArgumentMatchers.any(QueryMessage.class)))
+        //noinspection unchecked
+        when(mockQueryBus.query(any(QueryMessage.class)))
                 .thenReturn(CompletableFuture.completedFuture(answer));
-
 
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
@@ -54,7 +60,6 @@ public class TracingQueryGatewayTest {
 
         CompletableFuture<String> query = testSubject.query("query", "Query", String.class);
         assertThat(query.get(), CoreMatchers.is("answer"));
-
 
         // Verify the parent span is restored, and that a child span was finished.
         Span activeSpan = mockTracer.activeSpan();
