@@ -26,7 +26,7 @@ public class SpanUtils {
      */
     public static Tracer.SpanBuilder withMessageTags(Tracer.SpanBuilder spanBuilder, Message<?> message) {
         Tracer.SpanBuilder sb = spanBuilder.withTag(TAG_AXON_ID, message.getIdentifier())
-                                           .withTag(TAG_AXON_MSG_TYPE, resolveType(message))
+                                           .withTag(TAG_AXON_MSG_TYPE, messageName(message))
                                            .withTag(TAG_AXON_PAYLOAD_TYPE, message.getPayloadType().getName());
         if (message instanceof CommandMessage) {
             return sb.withTag(TAG_AXON_COMMAND_NAME, ((CommandMessage<?>) message).getCommandName());
@@ -41,24 +41,28 @@ public class SpanUtils {
      * <p>
      * This method will check if the message is a
      * <ul>
-     * <li>{@link QueryMessage}, returning "{@code QueryMessage}",</li>
-     * <li>{@link CommandMessage}, returning "{@code CommandMessage}",</li>
-     * <li>{@link EventMessage}, returning "{@code EventMessage}",</li>
+     * <li>{@link QueryMessage}, returning  the queryName",</li>
+     * <li>{@link CommandMessage}, returning the commandName",</li>
+     * <li>{@link EventMessage}, returning the event type,</li>
      * <li>otherwise returns "{@code Message}"</li>
      * </ul>
      *
      * @param message The message to resolve the type of
      * @return a String describing the type of message
      */
-    public static String resolveType(Message message) {
-        Class<?> clazz = Message.class;
-        if (message instanceof QueryMessage) {
-            clazz = QueryMessage.class;
-        } else if (message instanceof CommandMessage) {
-            clazz = CommandMessage.class;
-        } else if (message instanceof EventMessage) {
-            clazz = EventMessage.class;
+    public static String messageName(Message message) {
+        if (message instanceof QueryMessage && !message.getPayloadType().getName().equals(((QueryMessage) message).getQueryName())) {
+            return ((QueryMessage) message).getQueryName();
+        } else if (message instanceof CommandMessage && !message.getPayloadType().getName().equals(((CommandMessage) message).getCommandName())) {
+            return ((CommandMessage) message).getCommandName();
         }
-        return clazz.getSimpleName();
+        return message.getPayloadType().getSimpleName();
+    }
+
+    public static <Q> String messageName(Q query, String queryName) {
+        if (!query.getClass().getName().equals(queryName)) {
+            return queryName;
+        }
+        return query.getClass().getSimpleName();
     }
 }

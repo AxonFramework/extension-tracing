@@ -85,7 +85,7 @@ public class TracingQueryGateway implements QueryGateway {
     @Override
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
         Span parentSpan = tracer.activeSpan();
-        try (Scope scope = tracer.buildSpan(queryName).startActive(false)) {
+        try (Scope scope = tracer.buildSpan("send"+SpanUtils.messageName(query,queryName)).startActive(false)) {
             Span span = scope.span();
             return delegate.query(queryName, query, responseType).whenComplete((r, e) -> {
                 span.finish();
