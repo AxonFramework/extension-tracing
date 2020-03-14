@@ -22,12 +22,7 @@ import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.common.Registration;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.responsetypes.ResponseType;
-import org.axonframework.queryhandling.DefaultQueryGateway;
-import org.axonframework.queryhandling.QueryBus;
-import org.axonframework.queryhandling.QueryGateway;
-import org.axonframework.queryhandling.QueryMessage;
-import org.axonframework.queryhandling.SubscriptionQueryBackpressure;
-import org.axonframework.queryhandling.SubscriptionQueryResult;
+import org.axonframework.queryhandling.*;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -85,7 +80,7 @@ public class TracingQueryGateway implements QueryGateway {
     @Override
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
         Span parentSpan = tracer.activeSpan();
-        try (Scope scope = tracer.buildSpan("send"+SpanUtils.messageName(query,queryName)).startActive(false)) {
+        try (Scope scope = tracer.buildSpan("send" + SpanUtils.messageName(query, queryName)).startActive(false)) {
             Span span = scope.span();
             return delegate.query(queryName, query, responseType).whenComplete((r, e) -> {
                 span.finish();
