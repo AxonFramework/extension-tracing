@@ -1,5 +1,6 @@
 package org.axonframework.extensions.tracing;
 
+import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
@@ -34,41 +35,36 @@ public class OpenTraceHandlerInterceptorTest {
         unitOfWork = new DefaultUnitOfWork<>(null);
     }
 
-    @After
-    public void after() {
-        mockTracer.scopeManager().active().close();
-    }
-
     @Test
     public void testHandle() throws Exception {
         MockSpan test = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
-        scopeManager.activate(test, true);
+        try(final Scope ignored = scopeManager.activate(test)) {
+            Message message = new GenericMessage<Object>("Payload").withMetaData(new HashMap<String, String>() {{
+                put("spanid", "1");
+                put("traceid", "2");
+            }});
 
-        Message message = new GenericMessage<Object>("Payload").withMetaData(new HashMap<String, String>() {{
-            put("spanid", "1");
-            put("traceid", "2");
-        }});
+            unitOfWork.transformMessage(m -> message);
 
-        unitOfWork.transformMessage(m -> message);
+            openTraceDispatchInterceptor.handle(unitOfWork, mockInterceptorChain);
 
-        openTraceDispatchInterceptor.handle(unitOfWork, mockInterceptorChain);
+            // Push the state, so the child span is finished.
+            unitOfWork.start();
+            unitOfWork.commit();
 
-        // Push the state, so the child span is finished.
-        unitOfWork.start();
-        unitOfWork.commit();
+            List<MockSpan> mockSpans = mockTracer.finishedSpans();
+            assertThat(mockSpans.size(), is(1));
+            MockSpan mockSpan = mockSpans.get(0);
+            assertThat(mockSpan.parentId(), is(1L));
+            assertThat(mockSpan.context().traceId(), is(2L));
 
-        List<MockSpan> mockSpans = mockTracer.finishedSpans();
-        assertThat(mockSpans.size(), is(1));
-        MockSpan mockSpan = mockSpans.get(0);
-        assertThat(mockSpan.parentId(), is(1L));
-        assertThat(mockSpan.context().traceId(), is(2L));
+            assertThat(mockSpan.operationName(), is("handleMessage"));
+            assertThat(mockSpan.tags().get("axon.message.id"), is(message.getIdentifier()));
+            assertThat(mockSpan.tags().get("axon.message.type"), is("Message"));
+            assertThat(mockSpan.tags().get("axon.message.payloadtype"), is("java.lang.String"));
 
-        assertThat(mockSpan.operationName(), is("handleMessage"));
-        assertThat(mockSpan.tags().get("axon.message.id"), is(message.getIdentifier()));
-        assertThat(mockSpan.tags().get("axon.message.type"), is("Message"));
-        assertThat(mockSpan.tags().get("axon.message.payloadtype"), is("java.lang.String"));
-
-        assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));
+            assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));
+        }
     }
 }

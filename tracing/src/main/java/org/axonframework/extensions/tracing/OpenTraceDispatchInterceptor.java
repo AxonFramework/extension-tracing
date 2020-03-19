@@ -53,8 +53,7 @@ public class OpenTraceDispatchInterceptor implements MessageDispatchInterceptor<
     public BiFunction<Integer, Message<?>, Message<?>> handle(List<? extends Message<?>> messages) {
         ScopeManager scopeManager = tracer.scopeManager();
         Optional<SpanContext> spanContextOptional = Optional.ofNullable(scopeManager)
-                                                            .map(ScopeManager::active)
-                                                            .map(Scope::span)
+                                                            .map(ScopeManager::activeSpan)
                                                             .map(Span::context);
 
         return spanContextOptional.<BiFunction<Integer, Message<?>, Message<?>>>map(spanContext -> (index, message) -> {
