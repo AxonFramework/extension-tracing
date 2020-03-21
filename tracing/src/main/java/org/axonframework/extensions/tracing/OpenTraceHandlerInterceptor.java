@@ -53,7 +53,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
     public Object handle(UnitOfWork unitOfWork, InterceptorChain interceptorChain) throws Exception {
         MetaData metaData = unitOfWork.getMessage().getMetaData();
 
-        String operationName = "handle" + SpanUtils.messageName(unitOfWork.getMessage());
+        String operationName = "handle_" + SpanUtils.messageName(unitOfWork.getMessage());
         Tracer.SpanBuilder spanBuilder;
         try {
             MapExtractor extractor = new MapExtractor(metaData);
