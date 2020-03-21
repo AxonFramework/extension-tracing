@@ -67,6 +67,6 @@ public class TracingQueryGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("sendquery"));
+        assertThat(mockSpans.get(0).operationName(), is("send_query"));
     }
 }

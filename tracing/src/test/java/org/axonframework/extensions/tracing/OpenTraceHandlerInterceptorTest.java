@@ -68,7 +68,7 @@ public class OpenTraceHandlerInterceptorTest {
         assertThat(mockSpan.parentId(), is(1L));
         assertThat(mockSpan.context().traceId(), is(2L));
 
-        assertThat(mockSpan.operationName(), is("handleMyEvent"));
+        assertThat(mockSpan.operationName(), is("handle_MyEvent"));
         assertThat(mockSpan.tags().get("axon.message.id"), is(message.getIdentifier()));
         assertThat(mockSpan.tags().get("axon.message.type"), is("MyEvent"));
         assertThat(mockSpan.tags().get("axon.message.aggregateIdentifier"), is("aggregate_1"));

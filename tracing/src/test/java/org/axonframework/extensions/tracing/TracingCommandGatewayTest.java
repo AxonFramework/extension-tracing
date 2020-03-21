@@ -72,7 +72,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("sendMyCommand"));
+        assertThat(mockSpans.get(0).operationName(), is("send_MyCommand"));
 
         mockTracer.scopeManager().active().close();
         assertThat(mockTracer.scopeManager().active(), nullValue());
@@ -101,7 +101,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("sendMyCommand"));
+        assertThat(mockSpans.get(0).operationName(), is("send_MyCommand"));
 
         mockTracer.scopeManager().active().close();
         assertThat(mockTracer.scopeManager().active(), nullValue());
@@ -126,7 +126,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("sendAndWaitMyCommand"));
+        assertThat(mockSpans.get(0).operationName(), is("sendAndWait_MyCommand"));
 
         mockTracer.scopeManager().active().close();
         assertThat(mockTracer.scopeManager().active(), nullValue());
@@ -151,7 +151,7 @@ public class TracingCommandGatewayTest {
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
         assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("sendAndWaitMyCommand"));
+        assertThat(mockSpans.get(0).operationName(), is("sendAnd_WaitMyCommand"));
 
         mockTracer.scopeManager().active().close();
         assertThat(mockTracer.scopeManager().active(), nullValue());
