@@ -43,7 +43,6 @@ public class SpanUtils {
      * <ul>
      * <li>{@link QueryMessage}, returning  the queryName if it diverts from the (fully qualified) payload type, otherwise return payload type simple name ",</li>
      * <li>{@link CommandMessage}, returning the commandName if it diverts from the fully qualified) payload type, otherwise return payload type simple name ",</li>
-     * <li>{@link EventMessage}, returning the event type,</li>
      * <li>otherwise returns payload type simple name"</li>
      * </ul>
      *
