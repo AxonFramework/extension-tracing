@@ -42,7 +42,7 @@ public class SpanUtils {
      * This method will check if the message is a
      * <ul>
      * <li>{@link QueryMessage}, returning  the queryName if it diverts from the (fully qualified) payload type, otherwise return payload type simple name ",</li>
-     * <li>{@link CommandMessage}, returning the commandName if it diverts from the fully qualified) payload type, otherwise return payload type simple name ",</li>
+     * <li>{@link CommandMessage}, returning the commandName if it diverts from the (fully qualified) payload type, otherwise return payload type simple name ",</li>
      * <li>otherwise returns payload type simple name"</li>
      * </ul>
      *
