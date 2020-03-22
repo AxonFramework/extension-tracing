@@ -41,28 +41,28 @@ public class SpanUtils {
      * <p>
      * This method will check if the message is a
      * <ul>
-     * <li>{@link QueryMessage}, returning  the queryName",</li>
-     * <li>{@link CommandMessage}, returning the commandName",</li>
+     * <li>{@link QueryMessage}, returning  the queryName if it diverts from the payload type, otherwise return payload type simple name ",</li>
+     * <li>{@link CommandMessage}, returning the commandName if it diverts from the payload type, otherwise return payload type simple name ",</li>
      * <li>{@link EventMessage}, returning the event type,</li>
-     * <li>otherwise returns "{@code Message}"</li>
+     * <li>otherwise returns payload type simple name"</li>
      * </ul>
      *
      * @param message The message to resolve the type of
      * @return a String describing the type of message
      */
     public static String messageName(Message message) {
-        if (message instanceof QueryMessage && !message.getPayloadType().getName().equals(((QueryMessage) message).getQueryName())) {
-            return ((QueryMessage) message).getQueryName();
-        } else if (message instanceof CommandMessage && !message.getPayloadType().getName().equals(((CommandMessage) message).getCommandName())) {
-            return ((CommandMessage) message).getCommandName();
+        if (message instanceof QueryMessage) {
+            return messageName(message.getPayloadType(),((QueryMessage) message).getQueryName());
+        } else if (message instanceof CommandMessage) {
+            return messageName(message.getPayloadType(),((CommandMessage) message).getCommandName());
         }
         return message.getPayloadType().getSimpleName();
     }
 
-    public static <Q> String messageName(Q query, String queryName) {
-        if (!query.getClass().getName().equals(queryName)) {
-            return queryName;
+    static String messageName(Class payloadType, String name) {
+        if (!payloadType.getName().equals(name)) {
+            return name;
         }
-        return query.getClass().getSimpleName();
+        return payloadType.getSimpleName();
     }
 }
