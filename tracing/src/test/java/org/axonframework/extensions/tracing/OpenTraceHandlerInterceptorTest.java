@@ -8,7 +8,6 @@ import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.unitofwork.DefaultUnitOfWork;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,23 +33,16 @@ public class OpenTraceHandlerInterceptorTest {
         unitOfWork = new DefaultUnitOfWork<>(null);
     }
 
-    @After
-    public void after() {
-        mockTracer.scopeManager().active().close();
-    }
-
-
     @Test
     public void testHandle() throws Exception {
         MockSpan test = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
-        scopeManager.activate(test, true);
+        scopeManager.activate(test);
 
-        Message message = new GenericDomainEventMessage<MyEvent>("myEvent", "aggregate_1", 0, new MyEvent())
-                .withMetaData(new HashMap<String, String>() {{
-                    put("spanid", "1");
-                    put("traceid", "2");
-                }});
+        Message message = new GenericDomainEventMessage<MyEvent>("Payload", "aggregate_1", 0, new MyEvent()).withMetaData(new HashMap<String, String>() {{
+            put("spanid", "1");
+            put("traceid", "2");
+        }});
 
         unitOfWork.transformMessage(m -> message);
 

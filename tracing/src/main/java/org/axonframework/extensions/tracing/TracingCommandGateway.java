@@ -93,7 +93,7 @@ public class TracingCommandGateway implements CommandGateway {
         sendWithSpan(tracer, "send_"+ SpanUtils.messageName(cmd), cmd, (tracer, parentSpan, childSpan) -> {
             CompletableFuture<?> resultReceived = new CompletableFuture<>();
             delegate.send(command, (CommandCallback<C, R>) (commandMessage, commandResultMessage) -> {
-                try (Scope ignored = tracer.scopeManager().activate(parentSpan, false)) {
+                try (Scope ignored = tracer.scopeManager().activate(parentSpan)) {
                     childSpan.log("resultReceived");
                     callback.onResult(commandMessage, commandResultMessage);
                     childSpan.log("afterCallbackInvocation");
@@ -160,9 +160,11 @@ public class TracingCommandGateway implements CommandGateway {
         Span parent = tracer.activeSpan();
         Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
-        try (Scope scope = spanBuilder.startActive(false)) {
-            consumer.accept(tracer, parent, scope.span());
+        final Span span = spanBuilder.start();
+        try (Scope ignored = tracer.activateSpan(span)) {
+            consumer.accept(tracer, parent, span);
         }
+        tracer.scopeManager().activate(parent);
     }
 
     private RuntimeException asRuntime(Throwable e) {

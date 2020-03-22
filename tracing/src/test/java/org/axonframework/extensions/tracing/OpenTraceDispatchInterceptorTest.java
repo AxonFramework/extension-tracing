@@ -1,5 +1,6 @@
 package org.axonframework.extensions.tracing;
 
+import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
@@ -27,29 +28,24 @@ public class OpenTraceDispatchInterceptorTest {
         openTraceDispatchInterceptor = new OpenTraceDispatchInterceptor(mockTracer);
     }
 
-    @After
-    public void after() {
-        mockTracer.scopeManager().active().close();
-    }
-
     @Test
     public void testDispatch() {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
-        scopeManager.activate(span, false);
+        try(final Scope ignored = scopeManager.activate(span)) {
+            GenericMessage<String> msg = new GenericMessage<>("Payload");
+            BiFunction<Integer, Message<?>, Message<?>> handle =
+                    openTraceDispatchInterceptor.handle(Collections.singletonList(msg));
 
-        GenericMessage<String> msg = new GenericMessage<>("Payload");
-        BiFunction<Integer, Message<?>, Message<?>> handle =
-                openTraceDispatchInterceptor.handle(Collections.singletonList(msg));
+            // This interceptor has no side effects on the spans in the tracer.
+            List<MockSpan> mockSpans = mockTracer.finishedSpans();
+            assertThat(mockSpans.isEmpty(), is(true));
 
-        // This interceptor has no side effects on the spans in the tracer.
-        List<MockSpan> mockSpans = mockTracer.finishedSpans();
-        assertThat(mockSpans.isEmpty(), is(true));
-
-        Message<?> apply = handle.apply(0, msg);
-        MetaData metaData = apply.getMetaData();
-        assertThat(metaData.size(), is(2));
-        assertThat(metaData.get("spanid"), is(valueOf(span.context().spanId()).toString()));
-        assertThat(metaData.get("traceid"), is(valueOf(span.context().traceId()).toString()));
+            Message<?> apply = handle.apply(0, msg);
+            MetaData metaData = apply.getMetaData();
+            assertThat(metaData.size(), is(2));
+            assertThat(metaData.get("spanid"), is(valueOf(span.context().spanId()).toString()));
+            assertThat(metaData.get("traceid"), is(valueOf(span.context().traceId()).toString()));
+        }
     }
 }

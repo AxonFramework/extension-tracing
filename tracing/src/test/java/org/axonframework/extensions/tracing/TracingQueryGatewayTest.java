@@ -1,5 +1,6 @@
 package org.axonframework.extensions.tracing;
 
+import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.mock.MockSpan;
@@ -56,17 +57,17 @@ public class TracingQueryGatewayTest {
 
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
-        scopeManager.activate(span, false);
+        try (final Scope ignored = scopeManager.activate(span)) {
+            CompletableFuture<String> query = testSubject.query("query", "Query", String.class);
+            assertThat(query.get(), CoreMatchers.is("answer"));
 
-        CompletableFuture<String> query = testSubject.query("query", "Query", String.class);
-        assertThat(query.get(), CoreMatchers.is("answer"));
+            // Verify the parent span is restored, and that a child span was finished.
+            Span activeSpan = mockTracer.activeSpan();
+            assertThat(activeSpan, is(span));
 
-        // Verify the parent span is restored, and that a child span was finished.
-        Span activeSpan = mockTracer.activeSpan();
-        assertThat(activeSpan, is(span));
-
-        List<MockSpan> mockSpans = mockTracer.finishedSpans();
-        assertThat(mockSpans.size(), is(1));
-        assertThat(mockSpans.get(0).operationName(), is("send_query"));
+            List<MockSpan> mockSpans = mockTracer.finishedSpans();
+            assertThat(mockSpans.size(), is(1));
+            assertThat(mockSpans.get(0).operationName(), is("send_query"));
+        }
     }
 }
