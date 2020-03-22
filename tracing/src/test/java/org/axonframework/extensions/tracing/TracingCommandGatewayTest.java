@@ -78,8 +78,6 @@ public class TracingCommandGatewayTest {
         assertThat(mockTracer.scopeManager().active(), nullValue());
     }
 
-    private static class MyCommand {
-    }
 
     @Test
     public void testSendWithoutCallback() throws ExecutionException, InterruptedException {
@@ -156,4 +154,8 @@ public class TracingCommandGatewayTest {
         mockTracer.scopeManager().active().close();
         assertThat(mockTracer.scopeManager().active(), nullValue());
     }
+
+    private static class MyCommand {
+    }
+
 }

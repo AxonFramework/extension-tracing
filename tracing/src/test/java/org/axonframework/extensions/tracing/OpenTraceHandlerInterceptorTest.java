@@ -39,8 +39,6 @@ public class OpenTraceHandlerInterceptorTest {
         mockTracer.scopeManager().active().close();
     }
 
-    static class MyEvent {
-    }
 
     @Test
     public void testHandle() throws Exception {
@@ -75,5 +73,8 @@ public class OpenTraceHandlerInterceptorTest {
         assertThat(mockSpan.tags().get("axon.message.payloadtype"), is("org.axonframework.extensions.tracing.OpenTraceHandlerInterceptorTest$MyEvent"));
 
         assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));
+    }
+
+    private static class MyEvent {
     }
 }
