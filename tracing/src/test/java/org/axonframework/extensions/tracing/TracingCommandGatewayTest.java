@@ -60,10 +60,10 @@ public class TracingCommandGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
-            testSubject.send("Command", (m, r) -> {
-                // Call back.
-                assertThat(r, notNullValue());
-            });
+        testSubject.send(new MyCommand(), (m, r) -> {
+            // Call back.
+            assertThat(r, notNullValue());
+        });
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -74,9 +74,10 @@ public class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("sendCommandMessage"));
+            assertThat(mockSpans.get(0).operationName(), is("send_MyCommand"));
         }
     }
+
 
     @Test
     public void testSendWithoutCallback() throws ExecutionException, InterruptedException {
@@ -85,7 +86,7 @@ public class TracingCommandGatewayTest {
 
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
-            CompletableFuture<Object> future = testSubject.send("Command");
+            CompletableFuture<Object> future = testSubject.send(new MyCommand());
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -99,7 +100,7 @@ public class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("sendCommandMessage"));
+            assertThat(mockSpans.get(0).operationName(), is("send_MyCommand"));
         }
     }
 
@@ -109,7 +110,7 @@ public class TracingCommandGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
-            Object result = testSubject.sendAndWait("Command");
+        Object result = testSubject.sendAndWait(new MyCommand());
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -122,7 +123,7 @@ public class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("sendCommandMessageAndWait"));
+            assertThat(mockSpans.get(0).operationName(), is("sendAndWait_MyCommand"));
         }
     }
 
@@ -132,7 +133,7 @@ public class TracingCommandGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
-            Object result = testSubject.sendAndWait("Command", 10, TimeUnit.MILLISECONDS);
+        Object result = testSubject.sendAndWait(new MyCommand(), 10, TimeUnit.MILLISECONDS);
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -145,7 +146,11 @@ public class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("sendCommandMessageAndWait"));
+            assertThat(mockSpans.get(0).operationName(), is("sendAndWait_MyCommand"));
         }
     }
+
+    private static class MyCommand {
+    }
+
 }

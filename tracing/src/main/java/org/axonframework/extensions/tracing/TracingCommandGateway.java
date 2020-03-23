@@ -90,7 +90,7 @@ public class TracingCommandGateway implements CommandGateway {
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan(tracer, "sendCommandMessage", cmd, (tracer, parentSpan, childSpan) -> {
+        sendWithSpan(tracer, "send_"+ SpanUtils.messageName(cmd), cmd, (tracer, parentSpan, childSpan) -> {
             CompletableFuture<?> resultReceived = new CompletableFuture<>();
             delegate.send(command, (CommandCallback<C, R>) (commandMessage, commandResultMessage) -> {
                 try (Scope ignored = tracer.scopeManager().activate(parentSpan)) {
@@ -141,7 +141,7 @@ public class TracingCommandGateway implements CommandGateway {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan(tracer, "sendCommandMessageAndWait", cmd, (tracer, parentSpan, childSpan) -> {
+        sendWithSpan(tracer, "sendAndWait_"+ SpanUtils.messageName(cmd), cmd, (tracer, parentSpan, childSpan) -> {
             delegate.send(cmd, futureCallback);
             futureCallback.thenRun(() -> childSpan.log("resultReceived"));
 
