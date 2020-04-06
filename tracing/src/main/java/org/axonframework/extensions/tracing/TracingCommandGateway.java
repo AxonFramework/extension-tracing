@@ -19,7 +19,12 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
-import org.axonframework.commandhandling.*;
+import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.commandhandling.CommandCallback;
+import org.axonframework.commandhandling.CommandExecutionException;
+import org.axonframework.commandhandling.CommandMessage;
+import org.axonframework.commandhandling.CommandResultMessage;
+import org.axonframework.commandhandling.GenericCommandMessage;
 import org.axonframework.commandhandling.GenericCommandResultMessage;
 import org.axonframework.commandhandling.callbacks.FailureLoggingCallback;
 import org.axonframework.commandhandling.callbacks.FutureCallback;
@@ -57,23 +62,6 @@ public class TracingCommandGateway implements CommandGateway {
     private final CommandGateway delegate;
 
     /**
-     * Instantiate a Builder to be able to create a {@link TracingCommandGateway}.
-     * <p>
-     * Either a {@link CommandBus} or {@link CommandGateway} can be provided to be used to delegate the dispatching of
-     * commands to. If a CommandBus is provided directly, it will be used to instantiate a
-     * {@link DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured
-     * CommandBus.
-     * <p>
-     * The {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be
-     * provided.
-     *
-     * @return a Builder to be able to create a {@link TracingCommandGateway}
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /**
      * Instantiate a {@link TracingCommandGateway} based on the fields contained in the {@link Builder}.
      * <p>
      * Will assert that the {@link Tracer} and delegate {@link CommandGateway} are not {@code null}, and will throw an
@@ -87,10 +75,26 @@ public class TracingCommandGateway implements CommandGateway {
         this.delegate = builder.buildDelegateCommandGateway();
     }
 
+    /**
+     * Instantiate a Builder to be able to create a {@link TracingCommandGateway}.
+     * <p>
+     * Either a {@link CommandBus} or {@link CommandGateway} can be provided to be used to delegate the dispatching of
+     * commands to. If a CommandBus is provided directly, it will be used to instantiate a {@link
+     * DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured CommandBus.
+     * <p>
+     * The {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be
+     * provided.
+     *
+     * @return a Builder to be able to create a {@link TracingCommandGateway}
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan(tracer, "send_"+ SpanUtils.messageName(cmd), cmd, (tracer, parentSpan, childSpan) -> {
+        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, (parentSpan, childSpan) -> {
             CompletableFuture<?> resultReceived = new CompletableFuture<>();
             delegate.send(command, (CommandCallback<C, R>) (commandMessage, commandResultMessage) -> {
                 try (Scope ignored = tracer.scopeManager().activate(parentSpan)) {
@@ -141,7 +145,7 @@ public class TracingCommandGateway implements CommandGateway {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan(tracer, "sendAndWait_"+ SpanUtils.messageName(cmd), cmd, (tracer, parentSpan, childSpan) -> {
+        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, (parentSpan, childSpan) -> {
             delegate.send(cmd, futureCallback);
             futureCallback.thenRun(() -> childSpan.log("resultReceived"));
 
@@ -156,15 +160,15 @@ public class TracingCommandGateway implements CommandGateway {
         return commandResultMessage.getPayload();
     }
 
-    private void sendWithSpan(Tracer tracer, String operation, CommandMessage<?> command, SpanConsumer consumer) {
-        Span parent = tracer.activeSpan();
+    private void sendWithSpan(String operation, CommandMessage<?> command, SpanConsumer consumer) {
+        Span parentSpan = tracer.activeSpan();
         Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
-        final Span span = spanBuilder.start();
-        try (Scope ignored = tracer.activateSpan(span)) {
-            consumer.accept(tracer, parent, span);
+        final Span childSpan = spanBuilder.start();
+        try (Scope ignored = tracer.activateSpan(childSpan)) {
+            consumer.accept(parentSpan, childSpan);
         }
-        tracer.scopeManager().activate(parent);
+        tracer.activateSpan(parentSpan);
     }
 
     private RuntimeException asRuntime(Throwable e) {
@@ -186,16 +190,15 @@ public class TracingCommandGateway implements CommandGateway {
     @FunctionalInterface
     private interface SpanConsumer {
 
-        void accept(Tracer tracer, Span activeSpan, Span parentSpan);
+        void accept(Span parentSpan, Span childSpan);
     }
 
     /**
      * Builder class to instantiate a {@link TracingCommandGateway}.
      * <p>
      * Either a {@link CommandBus} or {@link CommandGateway} can be provided to be used to delegate the dispatching of
-     * commands to. If a CommandBus is provided directly, it will be used to instantiate a
-     * {@link DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured
-     * CommandBus.
+     * commands to. If a CommandBus is provided directly, it will be used to instantiate a {@link
+     * DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured CommandBus.
      * <p>
      * The {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be
      * provided.
@@ -256,11 +259,11 @@ public class TracingCommandGateway implements CommandGateway {
 
         /**
          * Instantiate the delegate {@link CommandGateway} this tracing-wrapper gateway will uses to actually dispatch
-         * commands.
-         * Will either use the registered {@link CommandBus} (through {@link #delegateCommandBus(CommandBus)}) or a
-         * complete CommandGateway through {@link #delegateCommandGateway(CommandGateway)}.
+         * commands. Will either use the registered {@link CommandBus} (through {@link #delegateCommandBus(CommandBus)})
+         * or a complete CommandGateway through {@link #delegateCommandGateway(CommandGateway)}.
          *
-         * @return the delegate {@link CommandGateway} this tracing-wrapper gateway will uses to actually dispatch commands
+         * @return the delegate {@link CommandGateway} this tracing-wrapper gateway will uses to actually dispatch
+         * commands
          */
         private CommandGateway buildDelegateCommandGateway() {
             return delegateGateway != null
