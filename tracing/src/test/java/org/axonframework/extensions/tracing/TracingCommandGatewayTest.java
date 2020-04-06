@@ -8,8 +8,7 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.axonframework.commandhandling.GenericCommandResultMessage.asCommandResultMessage;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
@@ -44,14 +43,14 @@ public class TracingCommandGatewayTest {
         doAnswer(invocation -> {
             ((CommandCallback) invocation.getArguments()[1])
                     .onResult((CommandMessage) invocation.getArguments()[0],
-                            asCommandResultMessage("result"));
+                              asCommandResultMessage("result"));
             return null;
         }).when(mockCommandBus).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
         testSubject = TracingCommandGateway.builder()
-                .tracer(mockTracer)
-                .delegateCommandBus(mockCommandBus)
-                .build();
+                                           .tracer(mockTracer)
+                                           .delegateCommandBus(mockCommandBus)
+                                           .build();
     }
 
     @Test
@@ -60,10 +59,10 @@ public class TracingCommandGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
-        testSubject.send(new MyCommand(), (m, r) -> {
-            // Call back.
-            assertThat(r, notNullValue());
-        });
+            testSubject.send(new MyCommand(), (m, r) -> {
+                // Call back.
+                assertThat(r, notNullValue());
+            });
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -110,7 +109,7 @@ public class TracingCommandGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
-        Object result = testSubject.sendAndWait(new MyCommand());
+            Object result = testSubject.sendAndWait(new MyCommand());
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -133,7 +132,7 @@ public class TracingCommandGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
-        Object result = testSubject.sendAndWait(new MyCommand(), 10, TimeUnit.MILLISECONDS);
+            Object result = testSubject.sendAndWait(new MyCommand(), 10, TimeUnit.MILLISECONDS);
 
             //noinspection unchecked
             verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
@@ -151,6 +150,6 @@ public class TracingCommandGatewayTest {
     }
 
     private static class MyCommand {
-    }
 
+    }
 }

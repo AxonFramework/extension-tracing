@@ -3,7 +3,6 @@ package org.axonframework.extensions.tracing;
 import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.eventhandling.DomainEventMessage;
-import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.queryhandling.QueryMessage;
 
@@ -11,6 +10,7 @@ import org.axonframework.queryhandling.QueryMessage;
  * Utility class providing methods useful for attaching information to Spans
  */
 public class SpanUtils {
+
     private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payloadtype";
     private static final String TAG_AXON_ID = "axon.message.id";
     private static final String TAG_AXON_AGGEGRATE_ID = "axon.message.aggregateIdentifier";
@@ -51,9 +51,9 @@ public class SpanUtils {
      */
     public static String messageName(Message message) {
         if (message instanceof QueryMessage) {
-            return messageName(message.getPayloadType(),((QueryMessage) message).getQueryName());
+            return messageName(message.getPayloadType(), ((QueryMessage) message).getQueryName());
         } else if (message instanceof CommandMessage) {
-            return messageName(message.getPayloadType(),((CommandMessage) message).getCommandName());
+            return messageName(message.getPayloadType(), ((CommandMessage) message).getCommandName());
         }
         return message.getPayloadType().getSimpleName();
     }

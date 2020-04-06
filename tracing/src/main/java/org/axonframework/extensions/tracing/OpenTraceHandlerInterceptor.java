@@ -42,7 +42,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
 
     /**
      * Initialize a {@link MessageHandlerInterceptor} implementation which uses the provided {@link Tracer} to map span
-     * information from the {@link Message} its {@link MetaData} on a {@link SpanContext}.
+     * information from the {@link Message}'s {@link MetaData} on a {@link SpanContext}.
      *
      * @param tracer the {@link Tracer} used to set a {@link SpanContext} on from a {@link Message}'s {@link MetaData}
      */
@@ -69,12 +69,12 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
             spanBuilder = tracer.buildSpan(operationName);
         }
 
-        final Span span = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).start();
+        final Span span = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(),
+                                                                                        Tags.SPAN_KIND_SERVER).start();
         try (Scope ignored = tracer.activateSpan(span)) {
             //noinspection unchecked
             unitOfWork.onCleanup(u -> span.finish());
             return interceptorChain.proceed();
         }
     }
-
 }
