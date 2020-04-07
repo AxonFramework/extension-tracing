@@ -7,7 +7,10 @@ import org.axonframework.messaging.Message;
 import org.axonframework.queryhandling.QueryMessage;
 
 /**
- * Utility class providing methods useful for attaching information to Spans
+ * Utility class providing methods useful for attaching information to Spans.
+ *
+ * @author Lucas Campos
+ * @since 4.0
  */
 public class SpanUtils {
 

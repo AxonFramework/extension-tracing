@@ -52,6 +52,7 @@ import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
  * @author Christophe Bouhier
  * @author Allard Buijze
  * @author Steven van Beelen
+ * @author Lucas Campos
  * @since 4.0
  */
 public class TracingCommandGateway implements CommandGateway {
