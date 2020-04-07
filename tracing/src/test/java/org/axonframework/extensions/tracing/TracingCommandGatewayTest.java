@@ -8,7 +8,7 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,9 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.axonframework.commandhandling.GenericCommandResultMessage.asCommandResultMessage;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.isA;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -27,7 +25,7 @@ import static org.mockito.Mockito.*;
  * @author Christophe Bouhier
  * @author Steven van Beelen
  */
-public class TracingCommandGatewayTest {
+class TracingCommandGatewayTest {
 
     private CommandBus mockCommandBus;
     private MockTracer mockTracer;
@@ -35,8 +33,8 @@ public class TracingCommandGatewayTest {
     private TracingCommandGateway testSubject;
 
     @SuppressWarnings("unchecked")
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         mockTracer = new MockTracer();
         mockCommandBus = mock(CommandBus.class);
 
@@ -54,32 +52,33 @@ public class TracingCommandGatewayTest {
     }
 
     @Test
-    public void testSendWithCallback() {
+    void testSendWithCallback() {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
 
             testSubject.send(new MyCommand(), (m, r) -> {
                 // Call back.
-                assertThat(r, notNullValue());
+                assertNotNull(r);
             });
 
             //noinspection unchecked
-            verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
+            verify(mockCommandBus, times(1))
+                    .dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
             // Verify the parent span is restored, and that a child span was finished.
             Span activeSpan = mockTracer.activeSpan();
-            assertThat(activeSpan, is(span));
+            assertEquals(span, activeSpan);
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
-            assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("send_MyCommand"));
+            assertEquals(1, mockSpans.size());
+            assertEquals("send_MyCommand", mockSpans.get(0).operationName());
         }
     }
 
 
     @Test
-    public void testSendWithoutCallback() throws ExecutionException, InterruptedException {
+    void testSendWithoutCallback() throws ExecutionException, InterruptedException {
 
         MockSpan span = mockTracer.buildSpan("test").start();
 
@@ -88,23 +87,24 @@ public class TracingCommandGatewayTest {
             CompletableFuture<Object> future = testSubject.send(new MyCommand());
 
             //noinspection unchecked
-            verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
+            verify(mockCommandBus, times(1))
+                    .dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
-            assertThat(future.isDone(), is(true));
-            assertThat(future.get(), is("result"));
+            assertTrue(future.isDone());
+            assertEquals("result", future.get());
 
             // Verify the parent span is restored, and that a child span was finished.
             Span activeSpan = mockTracer.activeSpan();
-            assertThat(activeSpan, is(span));
+            assertEquals(span, activeSpan);
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
-            assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("send_MyCommand"));
+            assertEquals(1, mockSpans.size());
+            assertEquals("send_MyCommand", mockSpans.get(0).operationName());
         }
     }
 
     @Test
-    public void testSendAndWait() {
+    void testSendAndWait() {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
@@ -112,22 +112,23 @@ public class TracingCommandGatewayTest {
             Object result = testSubject.sendAndWait(new MyCommand());
 
             //noinspection unchecked
-            verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
+            verify(mockCommandBus, times(1))
+                    .dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
-            assertThat(result, instanceOf(String.class));
-            assertThat(result, is("result"));
+            assertTrue(result instanceof String);
+            assertEquals("result", result);
 
             Span activeSpan = mockTracer.activeSpan();
-            assertThat(activeSpan, is(span));
+            assertEquals(span, activeSpan);
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
-            assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("sendAndWait_MyCommand"));
+            assertEquals(1, mockSpans.size());
+            assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
         }
     }
 
     @Test
-    public void testSendAndWaitWithTimeout() {
+    void testSendAndWaitWithTimeout() {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
@@ -135,17 +136,18 @@ public class TracingCommandGatewayTest {
             Object result = testSubject.sendAndWait(new MyCommand(), 10, TimeUnit.MILLISECONDS);
 
             //noinspection unchecked
-            verify(mockCommandBus, times(1)).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
+            verify(mockCommandBus, times(1))
+                    .dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
-            assertThat(result, instanceOf(String.class));
-            assertThat(result, is("result"));
+            assertTrue(result instanceof String);
+            assertEquals("result", result);
 
             Span activeSpan = mockTracer.activeSpan();
-            assertThat(activeSpan, is(span));
+            assertEquals(span, activeSpan);
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
-            assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("sendAndWait_MyCommand"));
+            assertEquals(1, mockSpans.size());
+            assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
         }
     }
 
