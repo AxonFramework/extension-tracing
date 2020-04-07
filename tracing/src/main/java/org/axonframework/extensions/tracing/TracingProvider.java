@@ -41,8 +41,8 @@ public class TracingProvider implements CorrelationDataProvider {
      * Initialize a {@link CorrelationDataProvider} implementation which uses the provided {@link Tracer} to set the
      * active span on a {@link Message}'s {@link MetaData}.
      *
-     * @param tracer the {@link Tracer} used to retrieve the active span to be placed on a {@link Message}'s
-     *               {@link MetaData}
+     * @param tracer the {@link Tracer} used to retrieve the active span to be placed on a {@link Message}'s {@link
+     *               MetaData}
      */
     public TracingProvider(Tracer tracer) {
         this.tracer = tracer;

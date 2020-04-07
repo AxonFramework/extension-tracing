@@ -15,7 +15,6 @@
  */
 package org.axonframework.extensions.tracing;
 
-import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -29,8 +28,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 /**
- * A {@link MessageDispatchInterceptor} which maps the {@link SpanContext} to
- * {@link org.axonframework.messaging.MetaData}.
+ * A {@link MessageDispatchInterceptor} which maps the {@link SpanContext} to {@link
+ * org.axonframework.messaging.MetaData}.
  *
  * @author Christophe Bouhier
  * @since 4.0

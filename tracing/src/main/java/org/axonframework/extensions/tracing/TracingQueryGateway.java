@@ -22,7 +22,12 @@ import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.common.Registration;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.responsetypes.ResponseType;
-import org.axonframework.queryhandling.*;
+import org.axonframework.queryhandling.DefaultQueryGateway;
+import org.axonframework.queryhandling.QueryBus;
+import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.queryhandling.QueryMessage;
+import org.axonframework.queryhandling.SubscriptionQueryBackpressure;
+import org.axonframework.queryhandling.SubscriptionQueryResult;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -34,9 +39,9 @@ import static org.axonframework.common.BuilderUtils.assertNonNull;
  * A tracing {@link QueryGateway} which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
  * This implementation is a wrapper and as such delegates the actual dispatching of queries to another QueryGateway.
  * <p>
- * Note that this implementation <b>>does not</b> support tracing for calls towards
- * {@link #scatterGather(String, Object, ResponseType, long, TimeUnit)} and
- * {@link #subscriptionQuery(String, Object, ResponseType, ResponseType, SubscriptionQueryBackpressure, int)} yet.
+ * Note that this implementation <b>>does not</b> support tracing for calls towards {@link #scatterGather(String,
+ * Object, ResponseType, long, TimeUnit)} and {@link #subscriptionQuery(String, Object, ResponseType, ResponseType,
+ * SubscriptionQueryBackpressure, int)} yet.
  *
  * @author Christophe Bouhier
  * @author Steven van Beelen
@@ -46,22 +51,6 @@ public class TracingQueryGateway implements QueryGateway {
 
     private final Tracer tracer;
     private final QueryGateway delegate;
-
-    /**
-     * Instantiate a Builder to be able to create a {@link TracingQueryGateway}.
-     * <p>
-     * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
-     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}.
-     * A registered QueryGateway will always take precedence over a configured QueryBus.
-     * <p>
-     * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
-     * provided.
-     *
-     * @return a Builder to be able to create a {@link TracingQueryGateway}
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
 
     /**
      * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
@@ -75,6 +64,22 @@ public class TracingQueryGateway implements QueryGateway {
         builder.validate();
         this.tracer = builder.tracer;
         this.delegate = builder.buildDelegateQueryGateway();
+    }
+
+    /**
+     * Instantiate a Builder to be able to create a {@link TracingQueryGateway}.
+     * <p>
+     * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
+     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}. A
+     * registered QueryGateway will always take precedence over a configured QueryBus.
+     * <p>
+     * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
+     * provided.
+     *
+     * @return a Builder to be able to create a {@link TracingQueryGateway}
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
     @Override
@@ -120,8 +125,8 @@ public class TracingQueryGateway implements QueryGateway {
      * Builder class to instantiate a {@link TracingQueryGateway}.
      * <p>
      * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
-     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}.
-     * A registered QueryGateway will always take precedence over a configured QueryBus.
+     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}. A
+     * registered QueryGateway will always take precedence over a configured QueryBus.
      * <p>
      * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
      * provided.
@@ -145,11 +150,11 @@ public class TracingQueryGateway implements QueryGateway {
         }
 
         /**
-         * Sets the {@link QueryBus} used to build a {@link DefaultQueryGateway} this tracing-wrapper will delegate
-         * the actual sending of queries towards.
+         * Sets the {@link QueryBus} used to build a {@link DefaultQueryGateway} this tracing-wrapper will delegate the
+         * actual sending of queries towards.
          *
-         * @param delegateBus the {@link QueryGateway} this tracing-wrapper will delegate the actual sending of
-         *                    queries towards
+         * @param delegateBus the {@link QueryGateway} this tracing-wrapper will delegate the actual sending of queries
+         *                    towards
          * @return the current Builder instance, for fluent interfacing
          */
         public Builder delegateQueryBus(QueryBus delegateBus) {
@@ -182,8 +187,7 @@ public class TracingQueryGateway implements QueryGateway {
 
         /**
          * Instantiate the delegate {@link QueryGateway} this tracing-wrapper gateway will uses to actually dispatch
-         * queries.
-         * Will either use the registered {@link QueryBus} (through {@link #delegateQueryBus(QueryBus)}) or a
+         * queries. Will either use the registered {@link QueryBus} (through {@link #delegateQueryBus(QueryBus)}) or a
          * complete QueryGateway through {@link #delegateQueryGateway(QueryGateway)}.
          *
          * @return the delegate {@link QueryGateway} this tracing-wrapper gateway will uses to actually dispatch queries

@@ -50,11 +50,11 @@ public class MapInjector implements TextMap {
     }
 
     /**
-     * Retrieve a {@link Map} of {@link String} to String of all the injected tracing fields used as input for
-     * {@link MetaData}.
+     * Retrieve a {@link Map} of {@link String} to String of all the injected tracing fields used as input for {@link
+     * MetaData}.
      *
-     * @return a {@link Map} of {@link String} to String  of all the injected tracing fields used as input for
-     * {@link MetaData}
+     * @return a {@link Map} of {@link String} to String  of all the injected tracing fields used as input for {@link
+     * MetaData}
      */
     public Map<String, String> getMetaData() {
         return metaData;
