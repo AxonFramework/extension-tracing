@@ -89,7 +89,6 @@ public class TracingQueryGateway implements QueryGateway {
         try (Scope ignored = tracer.activateSpan(span)) {
             return delegate.query(queryName, query, responseType).whenComplete((r, e) -> {
                 span.finish();
-                tracer.scopeManager().activate(parentSpan);
             });
         }
     }
