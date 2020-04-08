@@ -8,25 +8,23 @@ import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.unitofwork.DefaultUnitOfWork;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.HashMap;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class OpenTraceHandlerInterceptorTest {
+class OpenTraceHandlerInterceptorTest {
 
     private MockTracer mockTracer;
     private OpenTraceHandlerInterceptor openTraceDispatchInterceptor;
     private DefaultUnitOfWork<Message<?>> unitOfWork;
     private InterceptorChain mockInterceptorChain;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         mockTracer = new MockTracer();
         openTraceDispatchInterceptor = new OpenTraceHandlerInterceptor(mockTracer);
         mockInterceptorChain = mock(InterceptorChain.class);
@@ -34,15 +32,16 @@ public class OpenTraceHandlerInterceptorTest {
     }
 
     @Test
-    public void testHandle() throws Exception {
+    void testHandle() throws Exception {
         MockSpan test = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         scopeManager.activate(test);
 
-        Message message = new GenericDomainEventMessage<MyEvent>("Payload", "aggregate_1", 0, new MyEvent()).withMetaData(new HashMap<String, String>() {{
-            put("spanid", "1");
-            put("traceid", "2");
-        }});
+        Message message = new GenericDomainEventMessage<MyEvent>("Payload", "aggregate_1", 0, new MyEvent())
+                .withMetaData(new HashMap<String, String>() {{
+                    put("spanid", "1");
+                    put("traceid", "2");
+                }});
 
         unitOfWork.transformMessage(m -> message);
 
@@ -53,20 +52,22 @@ public class OpenTraceHandlerInterceptorTest {
         unitOfWork.commit();
 
         List<MockSpan> mockSpans = mockTracer.finishedSpans();
-        assertThat(mockSpans.size(), is(1));
+        assertEquals(1, mockSpans.size());
         MockSpan mockSpan = mockSpans.get(0);
-        assertThat(mockSpan.parentId(), is(1L));
-        assertThat(mockSpan.context().traceId(), is(2L));
+        assertEquals(1, mockSpan.parentId());
+        assertEquals(2, mockSpan.context().traceId());
 
-        assertThat(mockSpan.operationName(), is("handle_MyEvent"));
-        assertThat(mockSpan.tags().get("axon.message.id"), is(message.getIdentifier()));
-        assertThat(mockSpan.tags().get("axon.message.type"), is("MyEvent"));
-        assertThat(mockSpan.tags().get("axon.message.aggregateIdentifier"), is("aggregate_1"));
-        assertThat(mockSpan.tags().get("axon.message.payloadtype"), is("org.axonframework.extensions.tracing.OpenTraceHandlerInterceptorTest$MyEvent"));
+        assertEquals("handle_MyEvent", mockSpan.operationName());
+        assertEquals(message.getIdentifier(), mockSpan.tags().get("axon.message.id"));
+        assertEquals("MyEvent", mockSpan.tags().get("axon.message.type"));
+        assertEquals("aggregate_1", mockSpan.tags().get("axon.message.aggregateIdentifier"));
+        assertEquals("org.axonframework.extensions.tracing.OpenTraceHandlerInterceptorTest$MyEvent",
+                     mockSpan.tags().get("axon.message.payloadtype"));
 
-        assertThat(mockSpan.tags().get(Tags.SPAN_KIND.getKey()), is(Tags.SPAN_KIND_SERVER));
+        assertEquals(Tags.SPAN_KIND_SERVER, mockSpan.tags().get(Tags.SPAN_KIND.getKey()));
     }
 
     private static class MyEvent {
+
     }
 }

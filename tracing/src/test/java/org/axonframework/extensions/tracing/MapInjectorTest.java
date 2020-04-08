@@ -1,25 +1,25 @@
 package org.axonframework.extensions.tracing;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class MapInjectorTest {
+class MapInjectorTest {
 
     @Test
-    public void testInject() {
+    void testInject() {
         MapInjector injector = new MapInjector();
         injector.put("key", "value");
         Map<String, String> metaData = injector.getMetaData();
-        assertThat(metaData.get("key"), CoreMatchers.is("value"));
+        assertEquals("value", metaData.get("key"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testUnsupported() {
+    @Test
+    void testMapInjectorIterator_throwsUnsupportedOperationException() {
         MapInjector injector = new MapInjector();
-        injector.iterator();
+        Assertions.assertThrows(UnsupportedOperationException.class, () ->
+                injector.iterator());
     }
 }

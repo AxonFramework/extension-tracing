@@ -9,16 +9,13 @@ import org.axonframework.queryhandling.GenericQueryResponseMessage;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryMessage;
 import org.axonframework.queryhandling.QueryResponseMessage;
-import org.hamcrest.CoreMatchers;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -27,7 +24,7 @@ import static org.mockito.Mockito.*;
  * @author Christophe Bouhier
  * @author Steven van Beelen
  */
-public class TracingQueryGatewayTest {
+class TracingQueryGatewayTest {
 
     private QueryBus mockQueryBus;
     private MockTracer mockTracer;
@@ -36,8 +33,8 @@ public class TracingQueryGatewayTest {
 
     private QueryResponseMessage<String> answer;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         mockQueryBus = mock(QueryBus.class);
         mockTracer = new MockTracer();
 
@@ -50,7 +47,7 @@ public class TracingQueryGatewayTest {
     }
 
     @Test
-    public void testQuery() throws ExecutionException, InterruptedException {
+    void testQuery() throws ExecutionException, InterruptedException {
         //noinspection unchecked
         when(mockQueryBus.query(any(QueryMessage.class)))
                 .thenReturn(CompletableFuture.completedFuture(answer));
@@ -59,15 +56,15 @@ public class TracingQueryGatewayTest {
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
             CompletableFuture<String> query = testSubject.query("query", "Query", String.class);
-            assertThat(query.get(), CoreMatchers.is("answer"));
+            assertEquals("answer", query.get());
 
             // Verify the parent span is restored, and that a child span was finished.
             Span activeSpan = mockTracer.activeSpan();
-            assertThat(activeSpan, is(span));
+            assertEquals(span, activeSpan);
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
-            assertThat(mockSpans.size(), is(1));
-            assertThat(mockSpans.get(0).operationName(), is("send_query"));
+            assertEquals(1, mockSpans.size());
+            assertEquals("send_query", mockSpans.get(0).operationName());
         }
     }
 }

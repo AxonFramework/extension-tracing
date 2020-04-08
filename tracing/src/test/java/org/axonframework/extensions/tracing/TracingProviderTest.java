@@ -7,25 +7,23 @@ import io.opentracing.mock.MockTracer;
 import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MetaData;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TracingProviderTest {
+class TracingProviderTest {
 
     private MockTracer mockTracer;
 
-    @Before
+    @BeforeEach
     public void before() {
         mockTracer = new MockTracer();
     }
 
     @Test
-    public void testTracingProvider() {
+    void testTracingProvider() {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
@@ -36,16 +34,16 @@ public class TracingProviderTest {
 
             Map<String, ?> correlated = tracingProvider.correlationDataFor(message);
 
-            assertThat(correlated.get("spanid"), is(Long.valueOf(span.context().spanId()).toString()));
-            assertThat(correlated.get("traceid"), is(Long.valueOf(span.context().traceId()).toString()));
+            assertEquals(String.valueOf(span.context().spanId()), correlated.get("spanid"));
+            assertEquals(String.valueOf(span.context().traceId()), correlated.get("traceid"));
         }
     }
 
     @Test
-    public void testTracingProviderEmptyTraceContext() {
+    void testTracingProviderEmptyTraceContext() {
         Message message = new GenericMessage<>("payload", MetaData.emptyInstance());
         TracingProvider tracingProvider = new TracingProvider(mockTracer);
         Map<String, ?> correlated = tracingProvider.correlationDataFor(message);
-        assertThat(correlated.isEmpty(), is(true));
+        assertTrue(correlated.isEmpty());
     }
 }
