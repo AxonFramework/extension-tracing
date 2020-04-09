@@ -74,6 +74,7 @@ class TracingCommandGatewayTest {
             assertEquals(1, mockSpans.size());
             assertEquals("send_MyCommand", mockSpans.get(0).operationName());
         }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 
 
@@ -101,6 +102,7 @@ class TracingCommandGatewayTest {
             assertEquals(1, mockSpans.size());
             assertEquals("send_MyCommand", mockSpans.get(0).operationName());
         }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 
     @Test
@@ -125,6 +127,7 @@ class TracingCommandGatewayTest {
             assertEquals(1, mockSpans.size());
             assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
         }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 
     @Test
@@ -149,6 +152,7 @@ class TracingCommandGatewayTest {
             assertEquals(1, mockSpans.size());
             assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
         }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 
     private static class MyCommand {

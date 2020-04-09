@@ -169,7 +169,6 @@ public class TracingCommandGateway implements CommandGateway {
         try (Scope ignored = tracer.activateSpan(childSpan)) {
             consumer.accept(parentSpan, childSpan);
         }
-        tracer.activateSpan(parentSpan);
     }
 
     private RuntimeException asRuntime(Throwable e) {

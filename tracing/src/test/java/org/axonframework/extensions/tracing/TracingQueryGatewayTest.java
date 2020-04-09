@@ -66,5 +66,6 @@ class TracingQueryGatewayTest {
             assertEquals(1, mockSpans.size());
             assertEquals("send_query", mockSpans.get(0).operationName());
         }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 }
