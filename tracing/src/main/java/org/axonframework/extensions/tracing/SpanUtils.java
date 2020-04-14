@@ -61,7 +61,7 @@ public class SpanUtils {
         return message.getPayloadType().getSimpleName();
     }
 
-    static String messageName(Class payloadType, String name) {
+    private static String messageName(Class payloadType, String name) {
         if (!payloadType.getName().equals(name)) {
             return name;
         }
