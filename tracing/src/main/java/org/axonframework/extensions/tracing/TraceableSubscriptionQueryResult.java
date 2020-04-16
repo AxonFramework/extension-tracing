@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * @param <I> The type of initial result
  * @param <U> The type of incremental updates
  * @author Lucas Campos
- * @since 4.2
+ * @since 4.3
  */
 public class TraceableSubscriptionQueryResult<I, U> implements SubscriptionQueryResult<I, U> {
 
@@ -43,7 +43,7 @@ public class TraceableSubscriptionQueryResult<I, U> implements SubscriptionQuery
 
     @Override
     public Flux<U> updates() {
-        return updates.doOnEach(ignored -> span.log("updatesResultReceived"));
+        return updates.doOnEach(ignored -> span.log("updateReceived"));
     }
 
     @Override
