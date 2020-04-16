@@ -5,6 +5,7 @@ import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
+import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.DefaultSubscriptionQueryResult;
 import org.axonframework.queryhandling.GenericQueryResponseMessage;
@@ -57,7 +58,7 @@ class TracingQueryGatewayTest {
     }
 
     @Test
-    void testQuery() throws ExecutionException, InterruptedException {
+    void testQuery_queryName() throws ExecutionException, InterruptedException {
         //noinspection unchecked
         when(mockQueryBus.query(any(QueryMessage.class)))
                 .thenReturn(CompletableFuture.completedFuture(answer1));
@@ -65,7 +66,7 @@ class TracingQueryGatewayTest {
         MockSpan span = mockTracer.buildSpan("test").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
-            CompletableFuture<String> query = testSubject.query("query", "Query", String.class);
+            CompletableFuture<String> query = testSubject.query("pointQuery", "Query", String.class);
             assertEquals("answer1", query.get());
 
             // Verify the parent span is restored, and that a child span was finished.
@@ -74,7 +75,32 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("send_query", mockSpans.get(0).operationName());
+            assertEquals("query_pointQuery", mockSpans.get(0).operationName());
+        }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
+    }
+
+    @Test
+    void testQuery_query() throws ExecutionException, InterruptedException {
+        //noinspection unchecked
+        when(mockQueryBus.query(any(QueryMessage.class)))
+                .thenReturn(CompletableFuture.completedFuture(answer1));
+
+        MockSpan span = mockTracer.buildSpan("test").start();
+        ScopeManager scopeManager = mockTracer.scopeManager();
+        try (final Scope ignored = scopeManager.activate(span)) {
+            CompletableFuture<String> query = testSubject.query(
+                    new GenericMessage<>("Query"),
+                    String.class);
+            assertEquals("answer1", query.get());
+
+            // Verify the parent span is restored, and that a child span was finished.
+            Span activeSpan = mockTracer.activeSpan();
+            assertEquals(span, activeSpan);
+
+            List<MockSpan> mockSpans = mockTracer.finishedSpans();
+            assertEquals(1, mockSpans.size());
+            assertEquals("query_GenericMessage", mockSpans.get(0).operationName());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
