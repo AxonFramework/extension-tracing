@@ -45,6 +45,7 @@ import static org.axonframework.common.BuilderUtils.assertNonNull;
  *
  * @author Christophe Bouhier
  * @author Steven van Beelen
+ * @author Lucas Campos
  * @since 4.0
  */
 public class TracingQueryGateway implements QueryGateway {
@@ -84,13 +85,12 @@ public class TracingQueryGateway implements QueryGateway {
 
     @Override
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
-        Span parentSpan = tracer.activeSpan();
-        Span span = tracer.buildSpan("send_" + SpanUtils.messageName(query.getClass(), queryName)).start();
-        try (Scope ignored = tracer.activateSpan(span)) {
-            return delegate.query(queryName, query, responseType).whenComplete((r, e) -> {
-                span.finish();
-            });
-        }
+        return getWithSpan("query_" + SpanUtils.messageName(query.getClass(), queryName), (childSpan) ->
+                delegate.query(queryName, query, responseType)
+                        .whenComplete((r, e) -> {
+                            childSpan.log("resultReceived");
+                            childSpan.finish();
+                        }));
     }
 
     @Override
@@ -99,7 +99,12 @@ public class TracingQueryGateway implements QueryGateway {
                                           ResponseType<R> responseType,
                                           long timeout,
                                           TimeUnit timeUnit) {
-        return delegate.scatterGather(queryName, query, responseType, timeout, timeUnit);
+        return getWithSpan("scatterGather_" + SpanUtils.messageName(query.getClass(), queryName), (childSpan) ->
+                delegate.scatterGather(queryName, query, responseType, timeout, timeUnit)
+                        .onClose(() -> {
+                            childSpan.log("resultReceived");
+                            childSpan.finish();
+                        }));
     }
 
     @Override
@@ -109,15 +114,38 @@ public class TracingQueryGateway implements QueryGateway {
                                                                      ResponseType<U> updateResponseType,
                                                                      SubscriptionQueryBackpressure backpressure,
                                                                      int updateBufferSize) {
-        return delegate.subscriptionQuery(
-                queryName, query, initialResponseType, updateResponseType, backpressure, updateBufferSize
-        );
+
+        return getWithSpan("subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
+                           (childSpan) -> new TraceableSubscriptionQueryResult(
+                                   delegate.subscriptionQuery(
+                                           queryName,
+                                           query,
+                                           initialResponseType,
+                                           updateResponseType,
+                                           backpressure,
+                                           updateBufferSize),
+                                   childSpan
+                           ));
+    }
+
+    private <T> T getWithSpan(String operation, SpanSupplier<T> supplier) {
+        Span childSpan = tracer.buildSpan(operation)
+                               .start();
+        try (Scope ignored = tracer.activateSpan(childSpan)) {
+            return supplier.get(childSpan);
+        }
     }
 
     @Override
     public Registration registerDispatchInterceptor(
             MessageDispatchInterceptor<? super QueryMessage<?, ?>> dispatchInterceptor) {
         return delegate.registerDispatchInterceptor(dispatchInterceptor);
+    }
+
+    @FunctionalInterface
+    private interface SpanSupplier<T> {
+
+        T get(Span childSpan);
     }
 
     /**
