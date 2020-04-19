@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
@@ -95,22 +94,7 @@ public class TracingCommandGateway implements CommandGateway {
 
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
-        CommandMessage<? super C> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, span -> {
-            CompletableFuture<?> resultReceived = new CompletableFuture<>();
-            delegate.send(cmd, (CommandCallback<Object, R>) (commandMessage, commandResultMessage) -> {
-                try (Scope ignored = tracer.activateSpan(span)) {
-                    span.log("resultReceived");
-                    //noinspection unchecked
-                    callback.onResult((CommandMessage<? extends C>) commandMessage, commandResultMessage);
-                    span.log("afterCallbackInvocation");
-                } finally {
-                    resultReceived.complete(null);
-                }
-            });
-            span.log("dispatchComplete");
-            resultReceived.thenRun(span::finish);
-        });
+        sendWithSpan(command, callback);
     }
 
     @Override
@@ -143,19 +127,12 @@ public class TracingCommandGateway implements CommandGateway {
         return result;
     }
 
-    private <R> R doSendAndExtract(Object command,
-                                   Function<FutureCallback<Object, R>, CommandResultMessage<? extends R>> resultExtractor) {
+    private <R> R doSendAndExtract(
+            Object commandPayload,
+            Function<FutureCallback<Object, R>, CommandResultMessage<? extends R>> resultExtractor
+    ) {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
-
-        CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, span -> {
-            delegate.send(cmd, futureCallback);
-            futureCallback.thenRun(() -> span.log("resultReceived"));
-
-            span.log("dispatchComplete");
-            futureCallback.thenRun(span::finish);
-        });
-
+        sendWithSpan(commandPayload, futureCallback);
         CommandResultMessage<? extends R> commandResultMessage = resultExtractor.apply(futureCallback);
         if (commandResultMessage.isExceptional()) {
             throw asRuntime(commandResultMessage.exceptionResult());
@@ -163,12 +140,27 @@ public class TracingCommandGateway implements CommandGateway {
         return commandResultMessage.getPayload();
     }
 
-    private void sendWithSpan(String operation, CommandMessage<?> command, Consumer<Span> spanConsumer) {
-        Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
-                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
-        final Span span = spanBuilder.start();
+    private <C, R> void sendWithSpan(C commandPayload, CommandCallback<? super C, ? super R> callback) {
+
+        CommandMessage<? super C> command = GenericCommandMessage.asCommandMessage(commandPayload);
+        String operationName = "Send " + SpanUtils.messageName(command);
+        Span span = withMessageTags(tracer.buildSpan(operationName), command)
+                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+                .start();
+        CommandCallback<? super C, ? super R> tracedCommandCallback = (cmd, result) -> {
+            try (Scope ignored = tracer.activateSpan(span)) {
+                try {
+                    span.log("result received");
+                    callback.onResult(cmd, result);
+                    span.log("callbacks finished");
+                } finally {
+                    span.finish();
+                }
+            }
+        };
         try (Scope ignored = tracer.activateSpan(span)) {
-            spanConsumer.accept(span);
+            delegate.send(commandPayload, tracedCommandCallback);
+            span.log("dispatched");
         }
     }
 
