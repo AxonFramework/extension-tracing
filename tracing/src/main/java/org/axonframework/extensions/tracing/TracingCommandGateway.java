@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
@@ -95,20 +96,20 @@ public class TracingCommandGateway implements CommandGateway {
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
         CommandMessage<? super C> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
+        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, span -> {
             CompletableFuture<?> resultReceived = new CompletableFuture<>();
             delegate.send(cmd, (CommandCallback<Object, R>) (commandMessage, commandResultMessage) -> {
-                try (Scope ignored = tracer.activateSpan(childSpan)) {
-                    childSpan.log("resultReceived");
+                try (Scope ignored = tracer.activateSpan(span)) {
+                    span.log("resultReceived");
                     //noinspection unchecked
                     callback.onResult((CommandMessage<? extends C>) commandMessage, commandResultMessage);
-                    childSpan.log("afterCallbackInvocation");
+                    span.log("afterCallbackInvocation");
                 } finally {
                     resultReceived.complete(null);
                 }
             });
-            childSpan.log("dispatchComplete");
-            resultReceived.thenRun(childSpan::finish);
+            span.log("dispatchComplete");
+            resultReceived.thenRun(span::finish);
         });
     }
 
@@ -147,12 +148,12 @@ public class TracingCommandGateway implements CommandGateway {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
+        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, span -> {
             delegate.send(cmd, futureCallback);
-            futureCallback.thenRun(() -> childSpan.log("resultReceived"));
+            futureCallback.thenRun(() -> span.log("resultReceived"));
 
-            childSpan.log("dispatchComplete");
-            futureCallback.thenRun(childSpan::finish);
+            span.log("dispatchComplete");
+            futureCallback.thenRun(span::finish);
         });
 
         CommandResultMessage<? extends R> commandResultMessage = resultExtractor.apply(futureCallback);
@@ -162,12 +163,12 @@ public class TracingCommandGateway implements CommandGateway {
         return commandResultMessage.getPayload();
     }
 
-    private void sendWithSpan(String operation, CommandMessage<?> command, SpanConsumer consumer) {
+    private void sendWithSpan(String operation, CommandMessage<?> command, Consumer<Span> spanConsumer) {
         Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
-        final Span childSpan = spanBuilder.start();
-        try (Scope ignored = tracer.activateSpan(childSpan)) {
-            consumer.accept(childSpan);
+        final Span span = spanBuilder.start();
+        try (Scope ignored = tracer.activateSpan(span)) {
+            spanConsumer.accept(span);
         }
     }
 
@@ -185,12 +186,6 @@ public class TracingCommandGateway implements CommandGateway {
     public Registration registerDispatchInterceptor(
             MessageDispatchInterceptor<? super CommandMessage<?>> dispatchInterceptor) {
         return delegate.registerDispatchInterceptor(dispatchInterceptor);
-    }
-
-    @FunctionalInterface
-    private interface SpanConsumer {
-
-        void accept(Span childSpan);
     }
 
     /**
