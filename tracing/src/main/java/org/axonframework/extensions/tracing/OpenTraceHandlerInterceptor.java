@@ -26,6 +26,11 @@ import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MessageHandlerInterceptor;
 import org.axonframework.messaging.MetaData;
 import org.axonframework.messaging.unitofwork.UnitOfWork;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 
 import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
 
@@ -38,6 +43,7 @@ import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
  */
 public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Message<?>> {
 
+    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private final Tracer tracer;
 
     /**
@@ -52,22 +58,12 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
 
     @Override
     public Object handle(UnitOfWork unitOfWork, InterceptorChain interceptorChain) throws Exception {
-        MetaData metaData = unitOfWork.getMessage().getMetaData();
+        Message message = unitOfWork.getMessage();
+        String operationName = "handle_" + SpanUtils.messageName(message);
 
-        String operationName = "handle_" + SpanUtils.messageName(unitOfWork.getMessage());
-        Tracer.SpanBuilder spanBuilder;
-        try {
-            MapExtractor extractor = new MapExtractor(metaData);
-            SpanContext parentSpan = tracer.extract(Format.Builtin.TEXT_MAP, extractor);
-
-            if (parentSpan == null) {
-                spanBuilder = tracer.buildSpan(operationName);
-            } else {
-                spanBuilder = tracer.buildSpan(operationName).asChildOf(parentSpan);
-            }
-        } catch (IllegalArgumentException e) {
-            spanBuilder = tracer.buildSpan(operationName);
-        }
+        Tracer.SpanBuilder spanBuilder = getParentSpan(message)
+                .map(parentSpan -> tracer.buildSpan(operationName).asChildOf(parentSpan))
+                .orElse(tracer.buildSpan(operationName));
 
         final Span span = withMessageTags(spanBuilder, unitOfWork.getMessage()).withTag(Tags.SPAN_KIND.getKey(),
                                                                                         Tags.SPAN_KIND_SERVER).start();
@@ -75,6 +71,17 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
             //noinspection unchecked
             unitOfWork.onCleanup(u -> span.finish());
             return interceptorChain.proceed();
+        }
+    }
+
+    private Optional<SpanContext> getParentSpan(Message<?> message) {
+        MetaData metaData = message.getMetaData();
+        MapExtractor extractor = new MapExtractor(metaData);
+        try {
+            return Optional.ofNullable(tracer.extract(Format.Builtin.TEXT_MAP, extractor));
+        } catch (IllegalArgumentException ex) {
+            logger.error("Corrupted parent span", ex);
+            return Optional.empty();
         }
     }
 }

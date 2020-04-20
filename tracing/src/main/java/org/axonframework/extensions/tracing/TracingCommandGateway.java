@@ -95,10 +95,10 @@ public class TracingCommandGateway implements CommandGateway {
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
         CommandMessage<? super C> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, (parentSpan, childSpan) -> {
+        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
             CompletableFuture<?> resultReceived = new CompletableFuture<>();
             delegate.send(cmd, (CommandCallback<Object, R>) (commandMessage, commandResultMessage) -> {
-                try (Scope ignored = tracer.scopeManager().activate(parentSpan)) {
+                try (Scope ignored = tracer.activateSpan(childSpan)) {
                     childSpan.log("resultReceived");
                     //noinspection unchecked
                     callback.onResult((CommandMessage<? extends C>) commandMessage, commandResultMessage);
@@ -147,7 +147,7 @@ public class TracingCommandGateway implements CommandGateway {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, (parentSpan, childSpan) -> {
+        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
             delegate.send(cmd, futureCallback);
             futureCallback.thenRun(() -> childSpan.log("resultReceived"));
 
@@ -163,12 +163,11 @@ public class TracingCommandGateway implements CommandGateway {
     }
 
     private void sendWithSpan(String operation, CommandMessage<?> command, SpanConsumer consumer) {
-        Span parentSpan = tracer.activeSpan();
         Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
         final Span childSpan = spanBuilder.start();
         try (Scope ignored = tracer.activateSpan(childSpan)) {
-            consumer.accept(parentSpan, childSpan);
+            consumer.accept(childSpan);
         }
     }
 
@@ -191,7 +190,7 @@ public class TracingCommandGateway implements CommandGateway {
     @FunctionalInterface
     private interface SpanConsumer {
 
-        void accept(Span parentSpan, Span childSpan);
+        void accept(Span childSpan);
     }
 
     /**
