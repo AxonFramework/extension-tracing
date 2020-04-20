@@ -19,40 +19,69 @@ package org.axonframework.extensions.tracing;
 import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.eventhandling.DomainEventMessage;
+import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.queryhandling.QueryMessage;
 
 /**
  * Utility class providing useful methods for attaching information to Spans.
  *
+ * @author Allard Buijze
  * @author Lucas Campos
+ * @author Steven van Beelen
  * @since 4.0
  */
 public class SpanUtils {
 
-    private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payloadtype";
     private static final String TAG_AXON_ID = "axon.message.id";
     private static final String TAG_AXON_AGGREGATE_ID = "axon.message.aggregateIdentifier";
-    private static final String TAG_AXON_MSG_TYPE = "axon.message.type";
-    private static final String TAG_AXON_COMMAND_NAME = "axon.message.commandName";
+    private static final String TAG_AXON_MESSAGE_TYPE = "axon.message.type";
+    private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payloadType";
+    private static final String TAG_AXON_MESSAGE_NAME = "axon.message.messageName";
 
     /**
      * Registers message-specific tags to the given {@code spanBuilder} based on the given {@code message}.
      *
-     * @param spanBuilder The Span Builder to register the tags with
-     * @param message     The message to retrieve details from
+     * @param spanBuilder the Span Builder to register the tags with
+     * @param message     the message to retrieve details from
      * @return a builder with tags attached
      */
     public static Tracer.SpanBuilder withMessageTags(Tracer.SpanBuilder spanBuilder, Message<?> message) {
         Tracer.SpanBuilder sb = spanBuilder.withTag(TAG_AXON_ID, message.getIdentifier())
-                                           .withTag(TAG_AXON_MSG_TYPE, messageName(message))
+                                           .withTag(TAG_AXON_MESSAGE_TYPE, resolveType(message))
                                            .withTag(TAG_AXON_PAYLOAD_TYPE, message.getPayloadType().getName());
-        if (message instanceof CommandMessage) {
-            return sb.withTag(TAG_AXON_COMMAND_NAME, ((CommandMessage<?>) message).getCommandName());
+        if (message instanceof CommandMessage || message instanceof QueryMessage) {
+            return sb.withTag(TAG_AXON_MESSAGE_NAME, messageName(message));
         } else if (message instanceof DomainEventMessage) {
             return sb.withTag(TAG_AXON_AGGREGATE_ID, ((DomainEventMessage<?>) message).getAggregateIdentifier());
         }
         return sb;
+    }
+
+    /**
+     * Resolves the type of message as a String, for use in description of operations.
+     * <p>
+     * This method will check if the message is a
+     * <ul>
+     * <li>{@link QueryMessage}, returning {@code "QueryMessage"},</li>
+     * <li>{@link CommandMessage}, returning {@code "CommandMessage"},</li>
+     * <li>{@link EventMessage}, returning {@code "EventMessage"},</li>
+     * <li>otherwise returns {@code "Message"}</li>
+     * </ul>
+     *
+     * @param message the message to resolve the type of
+     * @return a String describing the type of message
+     */
+    public static String resolveType(Message<?> message) {
+        Class<?> clazz = Message.class;
+        if (message instanceof QueryMessage) {
+            clazz = QueryMessage.class;
+        } else if (message instanceof CommandMessage) {
+            clazz = CommandMessage.class;
+        } else if (message instanceof EventMessage) {
+            clazz = EventMessage.class;
+        }
+        return clazz.getSimpleName();
     }
 
     /**
@@ -65,16 +94,16 @@ public class SpanUtils {
      * <li>otherwise returns payload type simple name"</li>
      * </ul>
      *
-     * @param message The message to resolve the type of
+     * @param message the message to resolve the type of
      * @return a String describing the type of message
      */
     public static String messageName(Message<?> message) {
-        if (message instanceof QueryMessage) {
-            //noinspection rawtypes
-            return messageName(message.getPayloadType(), ((QueryMessage) message).getQueryName());
-        } else if (message instanceof CommandMessage) {
+        if (message instanceof CommandMessage) {
             //noinspection rawtypes
             return messageName(message.getPayloadType(), ((CommandMessage) message).getCommandName());
+        } else if (message instanceof QueryMessage) {
+            //noinspection rawtypes
+            return messageName(message.getPayloadType(), ((QueryMessage) message).getQueryName());
         }
         return message.getPayloadType().getSimpleName();
     }

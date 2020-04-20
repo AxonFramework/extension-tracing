@@ -80,10 +80,10 @@ class OpenTraceHandlerInterceptorTest {
 
         assertEquals("handle_MyEvent", mockSpan.operationName());
         assertEquals(message.getIdentifier(), mockSpan.tags().get("axon.message.id"));
-        assertEquals("MyEvent", mockSpan.tags().get("axon.message.type"));
+        assertEquals("EventMessage", mockSpan.tags().get("axon.message.type"));
         assertEquals("aggregate_1", mockSpan.tags().get("axon.message.aggregateIdentifier"));
         assertEquals("org.axonframework.extensions.tracing.OpenTraceHandlerInterceptorTest$MyEvent",
-                     mockSpan.tags().get("axon.message.payloadtype"));
+                     mockSpan.tags().get("axon.message.payloadType"));
 
         assertEquals(Tags.SPAN_KIND_SERVER, mockSpan.tags().get(Tags.SPAN_KIND.getKey()));
     }

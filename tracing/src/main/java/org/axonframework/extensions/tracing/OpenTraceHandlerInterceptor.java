@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019. Axon Framework
+ * Copyright (c) 2010-2020. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
 public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Message<?>> {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final Tracer tracer;
 
     /**
@@ -58,7 +59,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
 
     @Override
     public Object handle(UnitOfWork unitOfWork, InterceptorChain interceptorChain) throws Exception {
-        Message message = unitOfWork.getMessage();
+        Message<?> message = unitOfWork.getMessage();
         String operationName = "handle_" + SpanUtils.messageName(message);
 
         Tracer.SpanBuilder spanBuilder = getParentSpan(message)
