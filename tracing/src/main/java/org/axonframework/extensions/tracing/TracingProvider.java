@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019. Axon Framework
+ * Copyright (c) 2010-2020. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import static java.util.Optional.ofNullable;
  */
 public class TracingProvider implements CorrelationDataProvider {
 
-    private Tracer tracer;
+    private final Tracer tracer;
 
     /**
      * Initialize a {@link CorrelationDataProvider} implementation which uses the provided {@link Tracer} to set the

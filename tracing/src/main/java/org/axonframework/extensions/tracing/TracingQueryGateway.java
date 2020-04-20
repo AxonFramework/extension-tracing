@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019. Axon Framework
+ * Copyright (c) 2010-2020. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class TracingQueryGateway implements QueryGateway {
                                                                      int updateBufferSize) {
 
         return getWithSpan("subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
-                           (childSpan) -> new TraceableSubscriptionQueryResult(
+                           (childSpan) -> new TraceableSubscriptionQueryResult<>(
                                    delegate.subscriptionQuery(
                                            queryName,
                                            query,
