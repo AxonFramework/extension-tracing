@@ -39,6 +39,24 @@ public class SpanUtils {
     private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payloadType";
     private static final String TAG_AXON_MESSAGE_NAME = "axon.message.messageName";
 
+
+    /**
+     * Registers query-specific tags to the given {@code spanBuilder} based on the given {@code query}.
+     *
+     * @param spanBuilder the Span Builder to register the tags with
+     * @param query       the query to retrieve details from
+     * @param queryName   the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
+     * @return a builder with tags attached
+     */
+    public static Tracer.SpanBuilder withQueryMessageTags(Tracer.SpanBuilder spanBuilder,
+                                                          Message<?> query,
+                                                          String queryName) {
+        return spanBuilder.withTag(TAG_AXON_ID, query.getIdentifier())
+                          .withTag(TAG_AXON_MESSAGE_TYPE, "QueryMessage")
+                          .withTag(TAG_AXON_PAYLOAD_TYPE, resolveType(query))
+                          .withTag(TAG_AXON_MESSAGE_NAME, queryName);
+    }
+
     /**
      * Registers message-specific tags to the given {@code spanBuilder} based on the given {@code message}.
      *

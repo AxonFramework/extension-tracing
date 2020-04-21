@@ -89,6 +89,10 @@ class TracingCommandGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("send_MyCommand", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
@@ -117,6 +121,10 @@ class TracingCommandGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("send_MyCommand", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
@@ -142,6 +150,10 @@ class TracingCommandGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
@@ -167,6 +179,10 @@ class TracingCommandGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
