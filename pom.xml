@@ -15,13 +15,11 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <groupId>org.axonframework.extensions.tracing</groupId>
     <artifactId>axon-tracing-parent</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.3</version>
     <modules>
         <module>tracing</module>
         <module>tracing-spring-boot-autoconfigure</module>
@@ -408,7 +406,7 @@
         <connection>scm:git:git://github.com/AxonFramework/extension-tracing.git</connection>
         <developerConnection>scm:git:git@github.com:AxonFramework/extension-tracing.git</developerConnection>
         <url>https://github.com/AxonFramework/extension-tracing</url>
-        <tag>HEAD</tag>
+        <tag>axon-tracing-4.3</tag>
     </scm>
 
     <developers>
