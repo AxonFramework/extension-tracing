@@ -89,14 +89,17 @@ public class TracingQueryGateway implements QueryGateway {
 
     @Override
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
-        return getWithSpan("query_" + SpanUtils.messageName(query.getClass(), queryName),
-                           GenericMessage.asMessage(query),
-                           queryName,
-                           (childSpan) -> delegate.query(queryName, query, responseType)
-                                                  .whenComplete((r, e) -> {
-                                                      childSpan.log("resultReceived");
-                                                      childSpan.finish();
-                                                  }));
+        Message<?> queryMessage = GenericMessage.asMessage(query);
+        return getWithSpan(
+                "query_" + SpanUtils.messageName(query.getClass(), queryName),
+                queryMessage,
+                queryName,
+                (childSpan) -> delegate.query(queryName, queryMessage, responseType)
+                                       .whenComplete((r, e) -> {
+                                           childSpan.log("resultReceived");
+                                           childSpan.finish();
+                                       })
+        );
     }
 
     @Override
@@ -105,14 +108,17 @@ public class TracingQueryGateway implements QueryGateway {
                                           ResponseType<R> responseType,
                                           long timeout,
                                           TimeUnit timeUnit) {
-        return getWithSpan("scatterGather_" + SpanUtils.messageName(query.getClass(), queryName),
-                           GenericMessage.asMessage(query),
-                           queryName,
-                           (childSpan) -> delegate.scatterGather(queryName, query, responseType, timeout, timeUnit)
-                                                  .onClose(() -> {
-                                                      childSpan.log("resultReceived");
-                                                      childSpan.finish();
-                                                  }));
+        Message<?> queryMessage = GenericMessage.asMessage(query);
+        return getWithSpan(
+                "scatterGather_" + SpanUtils.messageName(query.getClass(), queryName),
+                queryMessage,
+                queryName,
+                (childSpan) -> delegate.scatterGather(queryName, queryMessage, responseType, timeout, timeUnit)
+                                       .onClose(() -> {
+                                           childSpan.log("resultReceived");
+                                           childSpan.finish();
+                                       })
+        );
     }
 
     @Override
@@ -122,22 +128,22 @@ public class TracingQueryGateway implements QueryGateway {
                                                                      ResponseType<U> updateResponseType,
                                                                      SubscriptionQueryBackpressure backpressure,
                                                                      int updateBufferSize) {
-        return getWithSpan("subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
-                           GenericMessage.asMessage(query),
-                           queryName,
-                           (childSpan) -> new TraceableSubscriptionQueryResult<>(
-                                   delegate.subscriptionQuery(
-                                           queryName,
-                                           query,
-                                           initialResponseType,
-                                           updateResponseType,
-                                           backpressure,
-                                           updateBufferSize),
-                                   childSpan
-                           ));
+        Message<?> queryMessage = GenericMessage.asMessage(query);
+        return getWithSpan(
+                "subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
+                queryMessage,
+                queryName,
+                (childSpan) -> {
+                    SubscriptionQueryResult<I, U> subscriptionQueryResult = delegate.subscriptionQuery(
+                            queryName, queryMessage, initialResponseType, updateResponseType, backpressure,
+                            updateBufferSize
+                    );
+                    return new TraceableSubscriptionQueryResult<>(subscriptionQueryResult, childSpan);
+                }
+        );
     }
 
-    private <T> T getWithSpan(String operation, Message query, String queryName, SpanSupplier<T> supplier) {
+    private <T> T getWithSpan(String operation, Message<?> query, String queryName, SpanSupplier<T> supplier) {
         Tracer.SpanBuilder spanBuilder = withQueryMessageTags(tracer.buildSpan(operation), query, queryName)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
         final Span childSpan = spanBuilder.start();
