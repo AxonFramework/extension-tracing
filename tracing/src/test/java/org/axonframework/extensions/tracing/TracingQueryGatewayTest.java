@@ -25,6 +25,7 @@ import org.axonframework.messaging.GenericMessage;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.DefaultSubscriptionQueryResult;
 import org.axonframework.queryhandling.GenericQueryResponseMessage;
+import org.axonframework.queryhandling.GenericSubscriptionQueryUpdateMessage;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryMessage;
 import org.axonframework.queryhandling.QueryResponseMessage;
@@ -32,6 +33,7 @@ import org.axonframework.queryhandling.SubscriptionQueryResult;
 import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.Iterator;
 import java.util.List;
@@ -79,7 +81,7 @@ class TracingQueryGatewayTest {
         when(mockQueryBus.query(any(QueryMessage.class)))
                 .thenReturn(CompletableFuture.completedFuture(answer1));
 
-        MockSpan span = mockTracer.buildSpan("test").start();
+        MockSpan span = mockTracer.buildSpan("testQuery_queryName").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
             CompletableFuture<String> query = testSubject.query("pointQuery", "Query", String.class);
@@ -102,7 +104,7 @@ class TracingQueryGatewayTest {
         when(mockQueryBus.query(any(QueryMessage.class)))
                 .thenReturn(CompletableFuture.completedFuture(answer1));
 
-        MockSpan span = mockTracer.buildSpan("test").start();
+        MockSpan span = mockTracer.buildSpan("testQuery_query").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
             CompletableFuture<String> query = testSubject.query(
@@ -117,6 +119,10 @@ class TracingQueryGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("query_GenericMessage", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
@@ -127,7 +133,7 @@ class TracingQueryGatewayTest {
         when(mockQueryBus.scatterGather(any(QueryMessage.class), anyLong(), any()))
                 .thenReturn(Stream.of(answer1, answer2));
 
-        MockSpan span = mockTracer.buildSpan("test").start();
+        MockSpan span = mockTracer.buildSpan("testScatterGather").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
             try (Stream<String> actual = testSubject.scatterGather("query",
@@ -148,16 +154,23 @@ class TracingQueryGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("scatterGather_query", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 
     @Test
     void testSubscriptionQuery() {
+        String initial = "initial";
+        String update = "update";
+        SubscriptionQueryResult subscriptionQueryResult = createSubscriptionQueryResult(initial, update);
         when(mockQueryBus.subscriptionQuery(any(), any(), anyInt()))
-                .thenReturn(new DefaultSubscriptionQueryResult<>(Mono.empty(), Flux.empty(), () -> true));
+                .thenReturn(subscriptionQueryResult);
 
-        MockSpan span = mockTracer.buildSpan("test").start();
+        MockSpan span = mockTracer.buildSpan("testSubscriptionQuery").start();
         ScopeManager scopeManager = mockTracer.scopeManager();
         try (final Scope ignored = scopeManager.activate(span)) {
             SubscriptionQueryResult<String, String> result = testSubject.subscriptionQuery(new MyQuery(),
@@ -172,8 +185,64 @@ class TracingQueryGatewayTest {
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
             assertEquals("subscriptionQuery_MyQuery", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
+    }
+
+    @Test
+    void testSubscriptionQueryResults() {
+        String initial = "initial";
+        String[] updates = new String[]{"update1", "update2"};
+        SubscriptionQueryResult subscriptionQueryResult = createSubscriptionQueryResult(initial, updates);
+
+        when(mockQueryBus.subscriptionQuery(any(), any(), anyInt()))
+                .thenReturn(subscriptionQueryResult);
+
+        MockSpan span = mockTracer.buildSpan("testSubscriptionQueryResults").start();
+        ScopeManager scopeManager = mockTracer.scopeManager();
+        try (final Scope ignored = scopeManager.activate(span)) {
+            SubscriptionQueryResult<String, String> result =
+                    testSubject.subscriptionQuery(new MyQuery(),
+                                                  instanceOf(String.class),
+                                                  instanceOf(String.class));
+            // check the initialResult is there
+            StepVerifier.create(result.initialResult())
+                        .expectNext(initial)
+                        .expectComplete()
+                        .verify();
+            // check the following results are there
+            StepVerifier.create(result.updates())
+                        .expectNext(updates[0])
+                        .expectNext(updates[1])
+                        .expectComplete()
+                        .verify();
+            result.cancel();
+
+            // Verify the parent span is restored, and that a child span was finished.
+            Span activeSpan = mockTracer.activeSpan();
+            assertEquals(span, activeSpan);
+
+            List<MockSpan> mockSpans = mockTracer.finishedSpans();
+            assertEquals(1, mockSpans.size());
+            assertEquals("subscriptionQuery_MyQuery", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
+        }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
+    }
+
+    private <I, U> SubscriptionQueryResult createSubscriptionQueryResult(I initial, U... updates) {
+        return new DefaultSubscriptionQueryResult(
+                Mono.just(GenericQueryResponseMessage.asResponseMessage(initial)),
+                Flux.fromStream(Stream.of(updates)
+                                      .map(update -> GenericSubscriptionQueryUpdateMessage.asUpdateMessage(update))),
+                () -> true);
     }
 
     private static class MyQuery {
