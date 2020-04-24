@@ -43,11 +43,13 @@ class OpenTraceHandlerInterceptorTest {
     private OpenTraceHandlerInterceptor openTraceDispatchInterceptor;
     private DefaultUnitOfWork<Message<?>> unitOfWork;
     private InterceptorChain mockInterceptorChain;
+    private TracingProperties properties;
 
     @BeforeEach
     void before() {
         mockTracer = new MockTracer();
-        openTraceDispatchInterceptor = new OpenTraceHandlerInterceptor(mockTracer);
+        properties = new TracingProperties();
+        openTraceDispatchInterceptor = new OpenTraceHandlerInterceptor(mockTracer, properties);
         mockInterceptorChain = mock(InterceptorChain.class);
         unitOfWork = new DefaultUnitOfWork<>(null);
     }
@@ -78,7 +80,8 @@ class OpenTraceHandlerInterceptorTest {
         assertEquals(1, mockSpan.parentId());
         assertEquals(2, mockSpan.context().traceId());
 
-        assertEquals("handle_MyEvent", mockSpan.operationName());
+
+        assertEquals(properties.getHandle().getOperationNamePrefix().getCommand() + "MyEvent", mockSpan.operationName());
         assertEquals(message.getIdentifier(), mockSpan.tags().get("axon.message.id"));
         assertEquals("EventMessage", mockSpan.tags().get("axon.message.type"));
         assertEquals("aggregate_1", mockSpan.tags().get("axon.message.aggregateIdentifier"));

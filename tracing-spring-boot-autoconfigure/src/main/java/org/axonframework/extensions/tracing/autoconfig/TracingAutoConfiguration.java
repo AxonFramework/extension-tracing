@@ -22,6 +22,7 @@ import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
 import org.axonframework.extensions.tracing.OpenTraceHandlerInterceptor;
 import org.axonframework.extensions.tracing.TracingCommandGateway;
+import org.axonframework.extensions.tracing.TracingProperties;
 import org.axonframework.extensions.tracing.TracingProvider;
 import org.axonframework.extensions.tracing.TracingQueryGateway;
 import org.axonframework.messaging.correlation.CorrelationDataProvider;
@@ -32,8 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * Auto configure a tracing capabilities.
@@ -45,7 +49,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @AutoConfigureAfter(EventProcessingAutoConfiguration.class)
 @ConditionalOnClass(io.opentracing.Tracer.class)
+@Import(TracingAutoConfiguration.PropertiesConfiguration.class)
 public class TracingAutoConfiguration {
+
+    @Configuration
+    public static class PropertiesConfiguration{
+
+        //must be defined in a separate @Configuration to ensure creation order
+        @Bean
+        @ConfigurationProperties(prefix = "axon.tracing")
+        public TracingProperties tracingProperties() {
+            return new TracingProperties();
+        }
+    }
 
     @Bean
     public OpenTraceDispatchInterceptor traceDispatchInterceptor(Tracer tracer) {
@@ -53,20 +69,22 @@ public class TracingAutoConfiguration {
     }
 
     @Bean
-    public OpenTraceHandlerInterceptor traceHandlerInterceptor(Tracer tracer) {
-        return new OpenTraceHandlerInterceptor(tracer);
+    public OpenTraceHandlerInterceptor traceHandlerInterceptor(Tracer tracer, TracingProperties properties) {
+        return new OpenTraceHandlerInterceptor(tracer, properties);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public QueryGateway queryGateway(Tracer tracer,
                                      QueryBus queryBus,
+                                     TracingProperties properties,
                                      OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
                                      OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
         queryBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
         TracingQueryGateway tracingQueryGateway = TracingQueryGateway.builder()
                                                                      .delegateQueryBus(queryBus)
                                                                      .tracer(tracer)
+                                                                     .tracingProperties(properties)
                                                                      .build();
         tracingQueryGateway.registerDispatchInterceptor(openTraceDispatchInterceptor);
         return tracingQueryGateway;
@@ -76,12 +94,14 @@ public class TracingAutoConfiguration {
     @ConditionalOnMissingBean
     public CommandGateway commandGateway(Tracer tracer,
                                          CommandBus commandBus,
+                                         TracingProperties properties,
                                          OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
                                          OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
         commandBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
         TracingCommandGateway tracingCommandGateway = TracingCommandGateway.builder()
                                                                            .tracer(tracer)
                                                                            .delegateCommandBus(commandBus)
+                                                                           .tracingProperties(properties)
                                                                            .build();
         tracingCommandGateway.registerDispatchInterceptor(openTraceDispatchInterceptor);
         return tracingCommandGateway;

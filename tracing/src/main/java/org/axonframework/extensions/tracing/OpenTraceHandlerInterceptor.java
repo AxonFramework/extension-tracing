@@ -21,11 +21,13 @@ import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
+import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MessageHandlerInterceptor;
 import org.axonframework.messaging.MetaData;
 import org.axonframework.messaging.unitofwork.UnitOfWork;
+import org.axonframework.queryhandling.QueryMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,21 +48,33 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final Tracer tracer;
+    private final TracingProperties.OperationNamePrefix spanOperationNamePrefix;
 
     /**
      * Initialize a {@link MessageHandlerInterceptor} implementation which uses the provided {@link Tracer} to map span
      * information from the {@link Message}'s {@link MetaData} on a {@link SpanContext}.
      *
      * @param tracer the {@link Tracer} used to set a {@link SpanContext} on from a {@link Message}'s {@link MetaData}
+     * @param tracingProperties only those applicable to message handling will be used.
      */
-    public OpenTraceHandlerInterceptor(Tracer tracer) {
+    public OpenTraceHandlerInterceptor(Tracer tracer, TracingProperties tracingProperties) {
         this.tracer = tracer;
+        this.spanOperationNamePrefix = tracingProperties.getHandle().getOperationNamePrefix();
     }
 
     @Override
     public Object handle(UnitOfWork unitOfWork, InterceptorChain interceptorChain) throws Exception {
         Message<?> message = unitOfWork.getMessage();
-        String operationName = "handle_" + SpanUtils.messageName(message);
+        String operationNamePrefix;
+        if (message instanceof CommandMessage) {
+            operationNamePrefix = spanOperationNamePrefix.getCommand();
+        } else if (message instanceof QueryMessage) {
+            operationNamePrefix = spanOperationNamePrefix.getQuery();
+        } else {
+            //fixme what prefix to use here?
+            operationNamePrefix = spanOperationNamePrefix.getCommand();
+        }
+        String operationName = operationNamePrefix + SpanUtils.messageName(message);
 
         Tracer.SpanBuilder spanBuilder = getParentSpan(message)
                 .map(parentSpan -> tracer.buildSpan(operationName).asChildOf(parentSpan))

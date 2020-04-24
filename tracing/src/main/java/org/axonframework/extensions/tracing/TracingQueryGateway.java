@@ -54,8 +54,13 @@ import static org.axonframework.extensions.tracing.SpanUtils.withQueryMessageTag
  */
 public class TracingQueryGateway implements QueryGateway {
 
+    private static final String SPAN_TAG_QUERY_TYPE = "axon.message.query.type";
+    private enum QueryType{ POINT_TO_POINT, SCATTER_GATHER, SUBSCRIPTION }
+
+
     private final Tracer tracer;
     private final QueryGateway delegate;
+    private final String spanOperationNamePrefix;
 
     /**
      * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
@@ -69,6 +74,7 @@ public class TracingQueryGateway implements QueryGateway {
         builder.validate();
         this.tracer = builder.tracer;
         this.delegate = builder.buildDelegateQueryGateway();
+        this.spanOperationNamePrefix = builder.tracingProperties.getDispatch().getOperationNamePrefix().getQuery();
     }
 
     /**
@@ -91,14 +97,17 @@ public class TracingQueryGateway implements QueryGateway {
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
         Message<?> queryMessage = GenericMessage.asMessage(query);
         return getWithSpan(
-                "query_" + SpanUtils.messageName(query.getClass(), queryName),
+                spanOperationNamePrefix + SpanUtils.messageName(query.getClass(), queryName),
                 queryMessage,
                 queryName,
-                (childSpan) -> delegate.query(queryName, queryMessage, responseType)
-                                       .whenComplete((r, e) -> {
-                                           childSpan.log("resultReceived");
-                                           childSpan.finish();
-                                       })
+                (childSpan) -> {
+                    childSpan.setTag(SPAN_TAG_QUERY_TYPE, QueryType.POINT_TO_POINT.name());
+                    return delegate.query(queryName, queryMessage, responseType)
+                                   .whenComplete((r, e) -> {
+                                       childSpan.log("resultReceived");
+                                       childSpan.finish();
+                                   });
+                }
         );
     }
 
@@ -110,14 +119,17 @@ public class TracingQueryGateway implements QueryGateway {
                                           TimeUnit timeUnit) {
         Message<?> queryMessage = GenericMessage.asMessage(query);
         return getWithSpan(
-                "scatterGather_" + SpanUtils.messageName(query.getClass(), queryName),
+                spanOperationNamePrefix + SpanUtils.messageName(query.getClass(), queryName),
                 queryMessage,
                 queryName,
-                (childSpan) -> delegate.scatterGather(queryName, queryMessage, responseType, timeout, timeUnit)
-                                       .onClose(() -> {
-                                           childSpan.log("resultReceived");
-                                           childSpan.finish();
-                                       })
+                (childSpan) -> {
+                    childSpan.setTag(SPAN_TAG_QUERY_TYPE, QueryType.SCATTER_GATHER.name());
+                    return delegate.scatterGather(queryName, queryMessage, responseType, timeout, timeUnit)
+                                   .onClose(() -> {
+                                       childSpan.log("resultReceived");
+                                       childSpan.finish();
+                                   });
+                }
         );
     }
 
@@ -130,10 +142,11 @@ public class TracingQueryGateway implements QueryGateway {
                                                                      int updateBufferSize) {
         Message<?> queryMessage = GenericMessage.asMessage(query);
         return getWithSpan(
-                "subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
+                spanOperationNamePrefix + SpanUtils.messageName(query.getClass(), queryName),
                 queryMessage,
                 queryName,
                 (childSpan) -> {
+                    childSpan.setTag(SPAN_TAG_QUERY_TYPE, QueryType.SUBSCRIPTION.name());
                     SubscriptionQueryResult<I, U> subscriptionQueryResult = delegate.subscriptionQuery(
                             queryName, queryMessage, initialResponseType, updateResponseType, backpressure,
                             updateBufferSize
@@ -179,6 +192,7 @@ public class TracingQueryGateway implements QueryGateway {
         private Tracer tracer;
         private QueryBus delegateBus;
         private QueryGateway delegateGateway;
+        private TracingProperties tracingProperties;
 
         /**
          * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link QueryMessage}s.
@@ -242,6 +256,17 @@ public class TracingQueryGateway implements QueryGateway {
         }
 
         /**
+         * Sets the tracing properties. Only those applicable to query dispatching will be used.
+         *
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder tracingProperties(TracingProperties tracingProperties) {
+            assertNonNull(tracingProperties, "Tracing properties may not be null");
+            this.tracingProperties = tracingProperties;
+            return this;
+        }
+
+        /**
          * Validate whether the fields contained in this Builder as set accordingly.
          *
          * @throws AxonConfigurationException if one field is asserted to be incorrect according to the Builder's
@@ -249,6 +274,7 @@ public class TracingQueryGateway implements QueryGateway {
          */
         protected void validate() throws AxonConfigurationException {
             assertNonNull(tracer, "The Tracer is a hard requirement and should be provided");
+            assertNonNull(tracingProperties, "The tracing properties is a hard requirement and should be provided");
             if (delegateBus == null) {
                 assertNonNull(
                         delegateGateway, "The delegate QueryGateway is a hard requirement and should be provided"
