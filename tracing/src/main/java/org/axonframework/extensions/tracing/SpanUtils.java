@@ -41,23 +41,6 @@ public class SpanUtils {
 
 
     /**
-     * Registers query-specific tags to the given {@code spanBuilder} based on the given {@code query}.
-     *
-     * @param spanBuilder the Span Builder to register the tags with
-     * @param query       the query to retrieve details from
-     * @param queryName   the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
-     * @return a builder with tags attached
-     */
-    public static Tracer.SpanBuilder withQueryMessageTags(Tracer.SpanBuilder spanBuilder,
-                                                          Message<?> query,
-                                                          String queryName) {
-        return spanBuilder.withTag(TAG_AXON_ID, query.getIdentifier())
-                          .withTag(TAG_AXON_MESSAGE_TYPE, "QueryMessage")
-                          .withTag(TAG_AXON_PAYLOAD_TYPE, resolveType(query))
-                          .withTag(TAG_AXON_MESSAGE_NAME, queryName);
-    }
-
-    /**
      * Registers message-specific tags to the given {@code spanBuilder} based on the given {@code message}.
      *
      * @param spanBuilder the Span Builder to register the tags with
@@ -66,7 +49,7 @@ public class SpanUtils {
      */
     public static Tracer.SpanBuilder withMessageTags(Tracer.SpanBuilder spanBuilder, Message<?> message) {
         Tracer.SpanBuilder sb = spanBuilder.withTag(TAG_AXON_ID, message.getIdentifier())
-                                           .withTag(TAG_AXON_MESSAGE_TYPE, resolveType(message))
+                                           .withTag(TAG_AXON_MESSAGE_TYPE, resolveMessageType(message))
                                            .withTag(TAG_AXON_PAYLOAD_TYPE, message.getPayloadType().getName());
         if (message instanceof CommandMessage || message instanceof QueryMessage) {
             return sb.withTag(TAG_AXON_MESSAGE_NAME, messageName(message));
@@ -74,6 +57,23 @@ public class SpanUtils {
             return sb.withTag(TAG_AXON_AGGREGATE_ID, ((DomainEventMessage<?>) message).getAggregateIdentifier());
         }
         return sb;
+    }
+
+    /**
+     * Registers query-specific tags to the given {@code spanBuilder} based on the given {@code query}.
+     *
+     * @param spanBuilder the Span Builder to register the tags with
+     * @param queryMessage       the query to retrieve details from
+     * @param queryName   the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
+     * @return a builder with tags attached
+     */
+    public static Tracer.SpanBuilder withQueryMessageTags(Tracer.SpanBuilder spanBuilder,
+                                                          Message<?> queryMessage,
+                                                          String queryName) {
+        return spanBuilder.withTag(TAG_AXON_ID, queryMessage.getIdentifier())
+                          .withTag(TAG_AXON_MESSAGE_TYPE, QueryMessage.class.getSimpleName())
+                          .withTag(TAG_AXON_PAYLOAD_TYPE, queryMessage.getPayloadType().getName())
+                          .withTag(TAG_AXON_MESSAGE_NAME, queryName);
     }
 
     /**
@@ -90,7 +90,7 @@ public class SpanUtils {
      * @param message the message to resolve the type of
      * @return a String describing the type of message
      */
-    public static String resolveType(Message<?> message) {
+    public static String resolveMessageType(Message<?> message) {
         Class<?> clazz = Message.class;
         if (message instanceof QueryMessage) {
             clazz = QueryMessage.class;

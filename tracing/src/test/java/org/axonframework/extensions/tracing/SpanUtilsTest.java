@@ -132,12 +132,31 @@ class SpanUtilsTest {
     }
 
     @Test
-    void testResolveType() {
-        assertEquals("Message", SpanUtils.resolveType(TEST_MESSAGE));
-        assertEquals("CommandMessage", SpanUtils.resolveType(TEST_COMMAND));
-        assertEquals("QueryMessage", SpanUtils.resolveType(TEST_QUERY));
-        assertEquals("EventMessage", SpanUtils.resolveType(TEST_EVENT));
-        assertEquals("EventMessage", SpanUtils.resolveType(TEST_DOMAIN_EVENT));
+    void testWithQueryMessageTags() {
+        MockTracer.SpanBuilder spanBuilder = mockTracer.buildSpan("operation-name");
+
+        SpanUtils.withQueryMessageTags(spanBuilder, TEST_QUERY, TEST_QUERY.getQueryName());
+
+        MockSpan resultSpan = spanBuilder.start();
+        Map<String, Object> resultTags = resultSpan.tags();
+
+        assertTrue(resultTags.containsKey("axon.message.id"));
+        assertEquals(TEST_QUERY.getIdentifier(), resultTags.get("axon.message.id"));
+        assertTrue(resultTags.containsKey("axon.message.type"));
+        assertEquals("QueryMessage", resultTags.get("axon.message.type"));
+        assertTrue(resultTags.containsKey("axon.message.payloadType"));
+        assertEquals(TEST_QUERY.getPayloadType().getName(), resultTags.get("axon.message.payloadType"));
+        assertTrue(resultTags.containsKey("axon.message.messageName"));
+        assertEquals(TEST_QUERY.getQueryName(), resultTags.get("axon.message.messageName"));
+    }
+
+    @Test
+    void testResolveMessageType() {
+        assertEquals("Message", SpanUtils.resolveMessageType(TEST_MESSAGE));
+        assertEquals("CommandMessage", SpanUtils.resolveMessageType(TEST_COMMAND));
+        assertEquals("QueryMessage", SpanUtils.resolveMessageType(TEST_QUERY));
+        assertEquals("EventMessage", SpanUtils.resolveMessageType(TEST_EVENT));
+        assertEquals("EventMessage", SpanUtils.resolveMessageType(TEST_DOMAIN_EVENT));
     }
 
     @Test
