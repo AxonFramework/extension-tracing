@@ -34,10 +34,10 @@ import org.axonframework.queryhandling.QueryMessage;
 public class SpanUtils {
 
     private static final String TAG_AXON_ID = "axon.message.id";
-    private static final String TAG_AXON_AGGREGATE_ID = "axon.message.aggregateIdentifier";
+    private static final String TAG_AXON_AGGREGATE_ID = "axon.message.aggregate-identifier";
     private static final String TAG_AXON_MESSAGE_TYPE = "axon.message.type";
-    private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payloadType";
-    private static final String TAG_AXON_MESSAGE_NAME = "axon.message.messageName";
+    private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payload-type";
+    private static final String TAG_AXON_MESSAGE_NAME = "axon.message.message-name";
 
 
     /**
@@ -62,9 +62,9 @@ public class SpanUtils {
     /**
      * Registers query-specific tags to the given {@code spanBuilder} based on the given {@code query}.
      *
-     * @param spanBuilder the Span Builder to register the tags with
-     * @param queryMessage       the query to retrieve details from
-     * @param queryName   the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
+     * @param spanBuilder  the Span Builder to register the tags with
+     * @param queryMessage the query to retrieve details from
+     * @param queryName    the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
      * @return a builder with tags attached
      */
     public static Tracer.SpanBuilder withQueryMessageTags(Tracer.SpanBuilder spanBuilder,
