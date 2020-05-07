@@ -1,7 +1,5 @@
 # Axon Framework - Tracing Extension [![Build Status](https://travis-ci.org/AxonFramework/extension-tracing.svg?branch=master)](https://travis-ci.org/AxonFramework/extension-tracing)
 
-_Note:_ This project is still in a beta stage.
-
 Axon Framework is a framework for building evolutionary, event-driven microservice systems,
  based on the principles of Domain Driven Design, Command-Query Responsibility Segregation (CQRS) and Event Sourcing.
 
