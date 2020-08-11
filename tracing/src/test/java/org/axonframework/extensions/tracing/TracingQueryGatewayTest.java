@@ -56,6 +56,7 @@ class TracingQueryGatewayTest {
 
     private QueryBus mockQueryBus;
     private MockTracer mockTracer;
+    private String spanOperationNamePrefix;
 
     private TracingQueryGateway testSubject;
 
@@ -65,10 +66,12 @@ class TracingQueryGatewayTest {
     void before() {
         mockQueryBus = mock(QueryBus.class);
         mockTracer = new MockTracer();
-
+        TracingProperties properties = new TracingProperties();
+        spanOperationNamePrefix = properties.getDispatch().getOperationNamePrefix().getQuery();
         testSubject = TracingQueryGateway.builder()
                                          .tracer(mockTracer)
                                          .delegateQueryBus(mockQueryBus)
+                                         .tracingProperties(properties)
                                          .build();
 
         answer1 = new GenericQueryResponseMessage<>("answer1");
@@ -93,7 +96,7 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("query_pointQuery", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "pointQuery", mockSpans.get(0).operationName());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
@@ -118,7 +121,7 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("query_GenericMessage", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "GenericMessage", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
@@ -153,7 +156,7 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("scatterGather_query", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "query", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
@@ -184,7 +187,7 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("subscriptionQuery_MyQuery", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "MyQuery", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
@@ -228,7 +231,7 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("subscriptionQuery_MyQuery", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "MyQuery", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());

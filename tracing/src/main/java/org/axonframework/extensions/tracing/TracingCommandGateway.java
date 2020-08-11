@@ -61,6 +61,7 @@ public class TracingCommandGateway implements CommandGateway {
 
     private final Tracer tracer;
     private final CommandGateway delegate;
+    private final String spanOperationNamePrefix;
 
     /**
      * Instantiate a {@link TracingCommandGateway} based on the fields contained in the {@link Builder}.
@@ -74,6 +75,7 @@ public class TracingCommandGateway implements CommandGateway {
         builder.validate();
         this.tracer = builder.tracer;
         this.delegate = builder.buildDelegateCommandGateway();
+        this.spanOperationNamePrefix = builder.tracingProperties.getDispatch().getOperationNamePrefix().getCommand();
     }
 
     /**
@@ -95,7 +97,7 @@ public class TracingCommandGateway implements CommandGateway {
     @Override
     public <C, R> void send(C command, CommandCallback<? super C, ? super R> callback) {
         CommandMessage<? super C> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("send_" + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
+        sendWithSpan(spanOperationNamePrefix + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
             CompletableFuture<?> resultReceived = new CompletableFuture<>();
             delegate.send(cmd, (CommandCallback<Object, R>) (commandMessage, commandResultMessage) -> {
                 try (Scope ignored = tracer.activateSpan(childSpan)) {
@@ -147,7 +149,7 @@ public class TracingCommandGateway implements CommandGateway {
         FutureCallback<Object, R> futureCallback = new FutureCallback<>();
 
         CommandMessage<?> cmd = GenericCommandMessage.asCommandMessage(command);
-        sendWithSpan("sendAndWait_" + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
+        sendWithSpan(spanOperationNamePrefix + SpanUtils.messageName(cmd), cmd, (childSpan) -> {
             delegate.send(cmd, futureCallback);
             futureCallback.thenRun(() -> childSpan.log("resultReceived"));
 
@@ -208,6 +210,7 @@ public class TracingCommandGateway implements CommandGateway {
         private Tracer tracer;
         private CommandBus delegateBus;
         private CommandGateway delegateGateway;
+        private TracingProperties tracingProperties;
 
         /**
          * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link CommandMessage}s.
@@ -249,6 +252,17 @@ public class TracingCommandGateway implements CommandGateway {
         }
 
         /**
+         * Sets the tracing properties. Only those applicable to command dispatching will be used.
+         *
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder tracingProperties(TracingProperties tracingProperties) {
+            assertNonNull(tracingProperties, "Tracing properties may not be null");
+            this.tracingProperties = tracingProperties;
+            return this;
+        }
+
+        /**
          * Initializes a {@link TracingCommandGateway} as specified through this Builder.
          *
          * @return a {@link TracingCommandGateway} as specified through this Builder
@@ -279,6 +293,7 @@ public class TracingCommandGateway implements CommandGateway {
          */
         protected void validate() throws AxonConfigurationException {
             assertNonNull(tracer, "The Tracer is a hard requirement and should be provided");
+            assertNonNull(tracingProperties, "The tracing properties is a hard requirement and should be provided");
             if (delegateBus == null) {
                 assertNonNull(
                         delegateGateway, "The delegate CommandGateway is a hard requirement and should be provided"

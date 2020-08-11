@@ -45,6 +45,7 @@ class TracingCommandGatewayTest {
 
     private CommandBus mockCommandBus;
     private MockTracer mockTracer;
+    private String spanOperationNamePrefix;
 
     private TracingCommandGateway testSubject;
 
@@ -61,9 +62,12 @@ class TracingCommandGatewayTest {
             return null;
         }).when(mockCommandBus).dispatch(isA(CommandMessage.class), isA(CommandCallback.class));
 
+        TracingProperties properties = new TracingProperties();
+        spanOperationNamePrefix = properties.getDispatch().getOperationNamePrefix().getCommand();
         testSubject = TracingCommandGateway.builder()
                                            .tracer(mockTracer)
                                            .delegateCommandBus(mockCommandBus)
+                                           .tracingProperties(properties)
                                            .build();
     }
 
@@ -88,7 +92,7 @@ class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("send_MyCommand", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "MyCommand", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
@@ -120,7 +124,7 @@ class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("send_MyCommand", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "MyCommand", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
@@ -149,7 +153,7 @@ class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "MyCommand", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
@@ -178,7 +182,7 @@ class TracingCommandGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("sendAndWait_MyCommand", mockSpans.get(0).operationName());
+            assertEquals(spanOperationNamePrefix + "MyCommand", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
