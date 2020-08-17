@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-/**
- * @author Corrado Musumeci
- * @since 4.4
- */
-
 package org.axonframework.extensions.tracing.autoconfig;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Defines the properties for the Tracing extension, when automatically configured in the Application Context.
+ *
+ * @author Corrado Musumeci
+ * @since 4.4
  */
+
 @ConfigurationProperties(prefix = "axon.extension.tracing")
 public class TracingExtensionProperties {
 
     /**
-     * Enables Tracing configuration for this application.
+     * Enables Tracing configuration for this application. By default tracing extension is ENABLED (enabled = true).
      */
     private boolean enabled = false;
 
