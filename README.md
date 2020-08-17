@@ -21,7 +21,7 @@ For more information on anything Axon, please visit our website, [http://axoniq.
 
 ## Getting started
 
-The [reference guide](https://docs.axoniq.io) chapter to cover this extension is currently work in progress.
+The [reference guide](https://docs.axoniq.io/reference-guide/extensions/tracing) chapter about tracing extension contains some useful information that can help you to quick start.
 
 ## Receiving help
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019. Axon Framework
+ * Copyright (c) 2010-2020. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,11 +42,14 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Christophe Bouhier
  * @author Steven van Beelen
+ * @author Corrado Musumeci
  * @since 4.0
  */
 @Configuration
 @AutoConfigureAfter(EventProcessingAutoConfiguration.class)
+@EnableConfigurationProperties(TracingExtensionProperties.class)
 @ConditionalOnClass(io.opentracing.Tracer.class)
+@ConditionalOnProperty(value = "axon.extension.tracing.enabled", matchIfMissing = true)
 public class TracingAutoConfiguration {
 
     @Bean
