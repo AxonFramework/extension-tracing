@@ -21,6 +21,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
 import org.axonframework.extensions.tracing.OpenTraceHandlerInterceptor;
+import org.axonframework.extensions.tracing.MessageTagBuilderService;
 import org.axonframework.extensions.tracing.TracingCommandGateway;
 import org.axonframework.extensions.tracing.TracingProvider;
 import org.axonframework.extensions.tracing.TracingQueryGateway;
@@ -103,5 +104,12 @@ public class TracingAutoConfiguration {
         eventProcessingConfigurer.registerDefaultHandlerInterceptor(
                 (configuration, name) -> openTraceHandlerInterceptor
         );
+    }
+
+    @Bean
+    public MessageTagBuilderService spanBuilderService(SpanProperties spanProperties) {
+        MessageTagBuilderService.Builder builder = MessageTagBuilderService.builder();
+        // TODO: 11-09-20 How to map the lists to enable/disable tags
+        return builder.build();
     }
 }
