@@ -60,7 +60,7 @@
 
         <jackson.version>2.9.4</jackson.version>
         <commons-io.version>2.6</commons-io.version>
-        <reactor.version>3.3.4.RELEASE</reactor.version>
+        <reactor.version>3.3.10.RELEASE</reactor.version>
 
         <junit.jupiter.version>5.6.1</junit.jupiter.version>
         <mockito.version>3.3.3</mockito.version>
