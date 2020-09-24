@@ -52,7 +52,7 @@
 
         <axon.version>4.4.3</axon.version>
 
-        <spring.version>5.1.1.RELEASE</spring.version>
+        <spring.version>5.2.9.RELEASE</spring.version>
         <spring.boot.version>2.0.5.RELEASE</spring.boot.version>
 
         <slf4j.version>1.7.30</slf4j.version>
