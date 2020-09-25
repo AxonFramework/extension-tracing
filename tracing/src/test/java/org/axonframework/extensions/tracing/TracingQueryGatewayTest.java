@@ -118,7 +118,7 @@ class TracingQueryGatewayTest {
 
             List<MockSpan> mockSpans = mockTracer.finishedSpans();
             assertEquals(1, mockSpans.size());
-            assertEquals("query_GenericMessage", mockSpans.get(0).operationName());
+            assertEquals("query_java.lang.String", mockSpans.get(0).operationName());
             assertNotNull(mockSpans.get(0).logEntries());
             assertFalse(mockSpans.get(0).logEntries().isEmpty());
             assertNotNull(mockSpans.get(0).tags());
