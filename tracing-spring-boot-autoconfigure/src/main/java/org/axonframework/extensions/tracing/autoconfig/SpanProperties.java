@@ -16,12 +16,16 @@
 
 package org.axonframework.extensions.tracing.autoconfig;
 
+import org.axonframework.extensions.tracing.MessageTag;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
+
 /**
+ * Class containing properties defining the {@link io.opentracing.Span} build by this extension.
+ *
  * @author Corrado Musumeci
  * @author Steven van Beelen
  * @since 4.4
@@ -30,39 +34,54 @@ import java.util.List;
 public class SpanProperties {
 
     /**
-     *
+     * A list of {@link MessageTag} instances defining the tags to be added to a {@link io.opentracing.Span} when
+     * dealing with a {@link org.axonframework.commandhandling.CommandMessage}.
+     * <p>
+     * Defaults to the tags {@link MessageTag#MESSAGE_ID}, {@link MessageTag#MESSAGE_TYPE}, {@link
+     * MessageTag#PAYLOAD_TYPE} and {@link MessageTag#MESSAGE_NAME}.
      */
-    private List<String> commandTags = new ArrayList<>();
+    private List<MessageTag> commandTags =
+            asList(MessageTag.MESSAGE_ID, MessageTag.MESSAGE_TYPE, MessageTag.PAYLOAD_TYPE, MessageTag.MESSAGE_NAME);
     /**
-     *
+     * A list of {@link MessageTag} instances defining the tags to be added to a {@link io.opentracing.Span} when
+     * dealing with a {@link org.axonframework.eventhandling.EventMessage}.
+     * <p>
+     * Defaults to the tags {@link MessageTag#MESSAGE_ID}, {@link MessageTag#AGGREGATE_ID}, {@link
+     * MessageTag#MESSAGE_TYPE} and {@link MessageTag#PAYLOAD_TYPE}.
      */
-    private List<String> eventTags = new ArrayList<>();
+    private List<MessageTag> eventTags =
+            asList(MessageTag.MESSAGE_ID, MessageTag.AGGREGATE_ID, MessageTag.MESSAGE_TYPE, MessageTag.PAYLOAD_TYPE);
     /**
-     *
+     * A list of {@link MessageTag} instances defining the tags to be added to a {@link io.opentracing.Span} when
+     * dealing with a {@link org.axonframework.queryhandling.QueryMessage}.
+     * <p>
+     * Defaults to the tags {@link MessageTag#MESSAGE_ID}, {@link MessageTag#MESSAGE_TYPE}, {@link
+     * MessageTag#PAYLOAD_TYPE} and {@link MessageTag#MESSAGE_NAME}.
      */
-    private List<String> queryTags = new ArrayList<>();
+    private List<MessageTag> queryTags =
+            asList(MessageTag.MESSAGE_ID, MessageTag.MESSAGE_TYPE, MessageTag.PAYLOAD_TYPE, MessageTag.MESSAGE_NAME);
 
-    public List<String> getCommandTags() {
+    public List<MessageTag> getCommandTags() {
         return commandTags;
     }
 
-    public void setCommandTags(List<String> commandTags) {
+    public void setCommandTags(List<MessageTag> commandTags) {
         this.commandTags = commandTags;
     }
 
-    public List<String> getEventTags() {
+    public List<MessageTag> getEventTags() {
         return eventTags;
     }
 
-    public void setEventTags(List<String> eventTags) {
+    public void setEventTags(List<MessageTag> eventTags) {
         this.eventTags = eventTags;
     }
 
-    public List<String> getQueryTags() {
+    public List<MessageTag> getQueryTags() {
         return queryTags;
     }
 
-    public void setQueryTags(List<String> queryTags) {
+    public void setQueryTags(List<MessageTag> queryTags) {
         this.queryTags = queryTags;
     }
 }
