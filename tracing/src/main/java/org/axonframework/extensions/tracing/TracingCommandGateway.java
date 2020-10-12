@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
-import static org.axonframework.extensions.tracing.SpanUtils.withMessageTags;
 
 /**
  * A tracing {@link CommandGateway} which activates a calling {@link Span}, when the {@link CompletableFuture}
@@ -61,6 +60,23 @@ public class TracingCommandGateway implements CommandGateway {
 
     private final Tracer tracer;
     private final CommandGateway delegate;
+    private final MessageTagBuilderService messageTagBuilderService;
+
+    /**
+     * Instantiate a Builder to be able to create a {@link TracingCommandGateway}.
+     * <p>
+     * Either a {@link CommandBus} or {@link CommandGateway} can be provided to be used to delegate the dispatching of
+     * commands to. If a CommandBus is provided directly, it will be used to instantiate a {@link
+     * DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured CommandBus.
+     * <p>
+     * The {@link MessageTagBuilderService} is defaulted to a {@link MessageTagBuilderService#defaultService()}. The
+     * {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be provided.
+     *
+     * @return a Builder to be able to create a {@link TracingCommandGateway}
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
 
     /**
      * Instantiate a {@link TracingCommandGateway} based on the fields contained in the {@link Builder}.
@@ -74,22 +90,7 @@ public class TracingCommandGateway implements CommandGateway {
         builder.validate();
         this.tracer = builder.tracer;
         this.delegate = builder.buildDelegateCommandGateway();
-    }
-
-    /**
-     * Instantiate a Builder to be able to create a {@link TracingCommandGateway}.
-     * <p>
-     * Either a {@link CommandBus} or {@link CommandGateway} can be provided to be used to delegate the dispatching of
-     * commands to. If a CommandBus is provided directly, it will be used to instantiate a {@link
-     * DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured CommandBus.
-     * <p>
-     * The {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be
-     * provided.
-     *
-     * @return a Builder to be able to create a {@link TracingCommandGateway}
-     */
-    public static Builder builder() {
-        return new Builder();
+        this.messageTagBuilderService = builder.messageTagBuilderService;
     }
 
     @Override
@@ -163,8 +164,9 @@ public class TracingCommandGateway implements CommandGateway {
     }
 
     private void sendWithSpan(String operation, CommandMessage<?> command, SpanConsumer consumer) {
-        Tracer.SpanBuilder spanBuilder = withMessageTags(tracer.buildSpan(operation), command)
-                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
+        Tracer.SpanBuilder spanBuilder =
+                messageTagBuilderService.withCommandMessageTags(tracer.buildSpan(operation), command)
+                                        .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
         final Span childSpan = spanBuilder.start();
         try (Scope ignored = tracer.activateSpan(childSpan)) {
             consumer.accept(childSpan);
@@ -200,14 +202,15 @@ public class TracingCommandGateway implements CommandGateway {
      * commands to. If a CommandBus is provided directly, it will be used to instantiate a {@link
      * DefaultCommandGateway}. A registered CommandGateway will always take precedence over a configured CommandBus.
      * <p>
-     * The {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be
-     * provided.
+     * The {@link MessageTagBuilderService} is defaulted to a {@link MessageTagBuilderService#defaultService()}. The
+     * {@link Tracer} and delegate {@link CommandGateway} are <b>hard requirements</b> and as such should be provided.
      */
     public static class Builder {
 
         private Tracer tracer;
         private CommandBus delegateBus;
         private CommandGateway delegateGateway;
+        private MessageTagBuilderService messageTagBuilderService = MessageTagBuilderService.defaultService();
 
         /**
          * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link CommandMessage}s.
@@ -245,6 +248,20 @@ public class TracingCommandGateway implements CommandGateway {
         public Builder delegateCommandGateway(CommandGateway delegateGateway) {
             assertNonNull(delegateGateway, "Delegate CommandGateway may not be null");
             this.delegateGateway = delegateGateway;
+            return this;
+        }
+
+        /**
+         * Sets the {@link MessageTagBuilderService} to be used to add {@link CommandMessage} information as tags to a
+         * {@link Span}. Defaults to a {@link MessageTagBuilderService#defaultService()}.
+         *
+         * @param messageTagBuilderService the {@link MessageTagBuilderService} to be used to add {@link CommandMessage}
+         *                                 information as tags to a {@link Span}
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder messageTagBuilderService(MessageTagBuilderService messageTagBuilderService) {
+            assertNonNull(messageTagBuilderService, "MessageTagBuilderService may not be null");
+            this.messageTagBuilderService = messageTagBuilderService;
             return this;
         }
 

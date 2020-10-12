@@ -19,6 +19,7 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
+import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.common.Registration;
 import org.axonframework.messaging.GenericMessage;
@@ -42,10 +43,6 @@ import static org.axonframework.extensions.tracing.SpanUtils.withQueryMessageTag
 /**
  * A tracing {@link QueryGateway} which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
  * This implementation is a wrapper and as such delegates the actual dispatching of queries to another QueryGateway.
- * <p>
- * Note that this implementation <b>>does not</b> support tracing for calls towards {@link #scatterGather(String,
- * Object, ResponseType, long, TimeUnit)} and {@link #subscriptionQuery(String, Object, ResponseType, ResponseType,
- * SubscriptionQueryBackpressure, int)} yet.
  *
  * @author Christophe Bouhier
  * @author Steven van Beelen
@@ -56,6 +53,23 @@ public class TracingQueryGateway implements QueryGateway {
 
     private final Tracer tracer;
     private final QueryGateway delegate;
+    private final MessageTagBuilderService messageTagBuilderService;
+
+    /**
+     * Instantiate a Builder to be able to create a {@link TracingQueryGateway}.
+     * <p>
+     * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
+     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}. A
+     * registered QueryGateway will always take precedence over a configured QueryBus.
+     * <p>
+     * The {@link MessageTagBuilderService} is defaulted to a {@link MessageTagBuilderService#defaultService()}. The
+     * {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be provided.
+     *
+     * @return a Builder to be able to create a {@link TracingQueryGateway}
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
 
     /**
      * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
@@ -69,22 +83,7 @@ public class TracingQueryGateway implements QueryGateway {
         builder.validate();
         this.tracer = builder.tracer;
         this.delegate = builder.buildDelegateQueryGateway();
-    }
-
-    /**
-     * Instantiate a Builder to be able to create a {@link TracingQueryGateway}.
-     * <p>
-     * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
-     * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}. A
-     * registered QueryGateway will always take precedence over a configured QueryBus.
-     * <p>
-     * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
-     * provided.
-     *
-     * @return a Builder to be able to create a {@link TracingQueryGateway}
-     */
-    public static Builder builder() {
-        return new Builder();
+        this.messageTagBuilderService = builder.messageTagBuilderService;
     }
 
     @Override
@@ -144,6 +143,9 @@ public class TracingQueryGateway implements QueryGateway {
     }
 
     private <T> T getWithSpan(String operation, Message<?> query, String queryName, SpanSupplier<T> supplier) {
+        // TODO: 12-10-20 Think of nice way to resolve the Message issue here
+//        messageTagBuilderService.withMessageTags(tracer.buildSpan(operation), query)
+//                                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
         Tracer.SpanBuilder spanBuilder = withQueryMessageTags(tracer.buildSpan(operation), query, queryName)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
         final Span childSpan = spanBuilder.start();
@@ -171,14 +173,15 @@ public class TracingQueryGateway implements QueryGateway {
      * queries to. If a QueryBus is provided directly, it will be used to instantiate a {@link DefaultQueryGateway}. A
      * registered QueryGateway will always take precedence over a configured QueryBus.
      * <p>
-     * The {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be
-     * provided.
+     * The {@link MessageTagBuilderService} is defaulted to a {@link MessageTagBuilderService#defaultService()}. The
+     * {@link Tracer} and delegate {@link QueryGateway} are <b>hard requirements</b> and as such should be provided.
      */
     public static class Builder {
 
         private Tracer tracer;
         private QueryBus delegateBus;
         private QueryGateway delegateGateway;
+        private MessageTagBuilderService messageTagBuilderService;
 
         /**
          * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link QueryMessage}s.
@@ -216,6 +219,20 @@ public class TracingQueryGateway implements QueryGateway {
         public Builder delegateQueryGateway(QueryGateway delegateGateway) {
             assertNonNull(delegateGateway, "Delegate QueryGateway may not be null");
             this.delegateGateway = delegateGateway;
+            return this;
+        }
+
+        /**
+         * Sets the {@link MessageTagBuilderService} to be used to add {@link CommandMessage} information as tags to a
+         * {@link Span}. Defaults to a {@link MessageTagBuilderService#defaultService()}.
+         *
+         * @param messageTagBuilderService the {@link MessageTagBuilderService} to be used to add {@link CommandMessage}
+         *                                 information as tags to a {@link Span}
+         * @return the current Builder instance, for fluent interfacing
+         */
+        public Builder messageTagBuilderService(MessageTagBuilderService messageTagBuilderService) {
+            assertNonNull(messageTagBuilderService, "MessageTagBuilderService may not be null");
+            this.messageTagBuilderService = messageTagBuilderService;
             return this;
         }
 
