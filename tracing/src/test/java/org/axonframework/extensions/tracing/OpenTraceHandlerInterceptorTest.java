@@ -20,6 +20,7 @@ import io.opentracing.ScopeManager;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.mock.MockTracer;
 import io.opentracing.tag.Tags;
+import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.Message;
@@ -47,7 +48,7 @@ class OpenTraceHandlerInterceptorTest {
     @BeforeEach
     void before() {
         mockTracer = new MockTracer();
-        openTraceDispatchInterceptor = new OpenTraceHandlerInterceptor(mockTracer);
+        openTraceDispatchInterceptor = OpenTraceHandlerInterceptor.builder().tracer(mockTracer).build();
         mockInterceptorChain = mock(InterceptorChain.class);
         unitOfWork = new DefaultUnitOfWork<>(null);
     }
@@ -86,6 +87,14 @@ class OpenTraceHandlerInterceptorTest {
                      mockSpan.tags().get("axon.message.payload-type"));
 
         assertEquals(Tags.SPAN_KIND_SERVER, mockSpan.tags().get(Tags.SPAN_KIND.getKey()));
+    }
+
+    @Test
+    void testBuildWithNullMessageTagBuilderServiceThrowsAxonConfigurationException() {
+        assertThrows(
+                AxonConfigurationException.class,
+                () -> OpenTraceHandlerInterceptor.builder().messageTagBuilderService(null)
+        );
     }
 
     private static class MyEvent {
