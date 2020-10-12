@@ -22,6 +22,9 @@ import org.axonframework.messaging.Message;
 import java.util.function.BiFunction;
 
 /**
+  * Functional interface towards adding {@link Message} specific information as tags to a {@link
+ * io.opentracing.Tracer.SpanBuilder}.
+ *
  * @author Corrado Musumeci
  * @author Steven van Beelen
  * @since 4.4
@@ -30,17 +33,24 @@ import java.util.function.BiFunction;
 public interface MessageTagBuilder extends BiFunction<Tracer.SpanBuilder, Message<?>, Tracer.SpanBuilder> {
 
     /**
-     * @param spanBuilder
-     * @param message
-     * @return
+     * Build the new {@link Tracer.SpanBuilder} based on the given {@code spanBuilder} and {@code message}.
+     *
+     * @param spanBuilder the {@link Tracer.SpanBuilder} to add the given {@code message}'s information to as tags
+     * @param message     the {@link Message} to retrieve information from as the tags for the given {@code
+     *                    spanBuilder}
+     * @return a {@link Tracer.SpanBuilder} with additional tag information attached to it based on the given {@code
+     * message}
      */
     default Tracer.SpanBuilder build(Tracer.SpanBuilder spanBuilder, Message<?> message) {
         return apply(spanBuilder, message);
     }
 
     /**
-     * @param messageTagBuilder
-     * @return
+     * Combine {@code this} {@link MessageTagBuilder} with the given {@code messageTagBuilder}.
+     *
+     * @param messageTagBuilder the {@link MessageTagBuilder} to combine with {@code this} {@code MessageTagBuilder}
+     * @return a {@link MessageTagBuilder} consisting out of {@code this} {@link MessageTagBuilder} and the given {@code
+     * messageTagBuilder}
      */
     default MessageTagBuilder with(MessageTagBuilder messageTagBuilder) {
         return (spanBuilder, message) -> {
@@ -50,9 +60,12 @@ public interface MessageTagBuilder extends BiFunction<Tracer.SpanBuilder, Messag
     }
 
     /**
-     * @return
+     * Instantiate an empty {@link MessageTagBuilder}, to for example append additional {@code MessageTagBuilder}
+     * instance too through {@link #with(MessageTagBuilder)}
+     *
+     * @return an empty {@link MessageTagBuilder}
      */
-    static MessageTagBuilder noOp() {
+    static MessageTagBuilder builder() {
         return (spanBuilder, message) -> spanBuilder;
     }
 }
