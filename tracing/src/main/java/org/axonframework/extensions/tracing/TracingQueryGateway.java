@@ -22,15 +22,16 @@ import io.opentracing.tag.Tags;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.common.AxonConfigurationException;
 import org.axonframework.common.Registration;
-import org.axonframework.messaging.GenericMessage;
-import org.axonframework.messaging.Message;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.responsetypes.ResponseType;
 import org.axonframework.queryhandling.DefaultQueryGateway;
+import org.axonframework.queryhandling.GenericQueryMessage;
+import org.axonframework.queryhandling.GenericSubscriptionQueryMessage;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.queryhandling.QueryMessage;
 import org.axonframework.queryhandling.SubscriptionQueryBackpressure;
+import org.axonframework.queryhandling.SubscriptionQueryMessage;
 import org.axonframework.queryhandling.SubscriptionQueryResult;
 
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
-import static org.axonframework.extensions.tracing.SpanUtils.withQueryMessageTags;
+import static org.axonframework.messaging.GenericMessage.asMessage;
 
 /**
  * A tracing {@link QueryGateway} which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
@@ -88,11 +89,10 @@ public class TracingQueryGateway implements QueryGateway {
 
     @Override
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
-        Message<?> queryMessage = GenericMessage.asMessage(query);
+        QueryMessage<?, R> queryMessage = new GenericQueryMessage<>(asMessage(query), queryName, responseType);
         return getWithSpan(
                 "query_" + SpanUtils.messageName(query.getClass(), queryName),
                 queryMessage,
-                queryName,
                 (childSpan) -> delegate.query(queryName, queryMessage, responseType)
                                        .whenComplete((r, e) -> {
                                            childSpan.log("resultReceived");
@@ -107,11 +107,10 @@ public class TracingQueryGateway implements QueryGateway {
                                           ResponseType<R> responseType,
                                           long timeout,
                                           TimeUnit timeUnit) {
-        Message<?> queryMessage = GenericMessage.asMessage(query);
+        QueryMessage<?, R> queryMessage = new GenericQueryMessage<>(asMessage(query), queryName, responseType);
         return getWithSpan(
                 "scatterGather_" + SpanUtils.messageName(query.getClass(), queryName),
                 queryMessage,
-                queryName,
                 (childSpan) -> delegate.scatterGather(queryName, queryMessage, responseType, timeout, timeUnit)
                                        .onClose(() -> {
                                            childSpan.log("resultReceived");
@@ -127,11 +126,12 @@ public class TracingQueryGateway implements QueryGateway {
                                                                      ResponseType<U> updateResponseType,
                                                                      SubscriptionQueryBackpressure backpressure,
                                                                      int updateBufferSize) {
-        Message<?> queryMessage = GenericMessage.asMessage(query);
+        SubscriptionQueryMessage<?, I, U> queryMessage = new GenericSubscriptionQueryMessage<>(
+                asMessage(query), queryName, initialResponseType, updateResponseType
+        );
         return getWithSpan(
                 "subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
                 queryMessage,
-                queryName,
                 (childSpan) -> {
                     SubscriptionQueryResult<I, U> subscriptionQueryResult = delegate.subscriptionQuery(
                             queryName, queryMessage, initialResponseType, updateResponseType, backpressure,
@@ -142,12 +142,10 @@ public class TracingQueryGateway implements QueryGateway {
         );
     }
 
-    private <T> T getWithSpan(String operation, Message<?> query, String queryName, SpanSupplier<T> supplier) {
-        // TODO: 12-10-20 Think of nice way to resolve the Message issue here
-//        messageTagBuilderService.withMessageTags(tracer.buildSpan(operation), query)
-//                                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
-        Tracer.SpanBuilder spanBuilder = withQueryMessageTags(tracer.buildSpan(operation), query, queryName)
-                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
+    private <R, T> T getWithSpan(String operation, QueryMessage<?, R> query, SpanSupplier<T> supplier) {
+        Tracer.SpanBuilder spanBuilder =
+                messageTagBuilderService.withQueryMessageTags(tracer.buildSpan(operation), query)
+                                        .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
         final Span childSpan = spanBuilder.start();
         try (Scope ignored = tracer.activateSpan(childSpan)) {
             return supplier.get(childSpan);
@@ -181,7 +179,7 @@ public class TracingQueryGateway implements QueryGateway {
         private Tracer tracer;
         private QueryBus delegateBus;
         private QueryGateway delegateGateway;
-        private MessageTagBuilderService messageTagBuilderService;
+        private MessageTagBuilderService messageTagBuilderService = MessageTagBuilderService.defaultService();
 
         /**
          * Sets the {@link Tracer} used to set a {@link Span} on dispatched {@link QueryMessage}s.
