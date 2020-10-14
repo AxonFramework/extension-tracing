@@ -114,6 +114,10 @@ public class MessageTagBuilderService {
         return spanBuilder.withTag(MessageTag.MESSAGE_NAME.getTagKey(), messageName(message));
     }
 
+    private static Tracer.SpanBuilder withPayload(Tracer.SpanBuilder spanBuilder, Message<?> message) {
+        return spanBuilder.withTag(MessageTag.PAYLOAD.getTagKey(), message.getPayload().toString());
+    }
+
     /**
      * Add the given {@code message}'s information as tags to the given {@code spanBuilder}. Will validate if the given
      * {@code message} is of type {@link CommandMessage}, {@link EventMessage} or {@link QueryMessage} and based on that
@@ -196,6 +200,7 @@ public class MessageTagBuilderService {
         private static final MessageTagBuilder MESSAGE_TYPE = MessageTagBuilderService::withMessageType;
         private static final MessageTagBuilder PAYLOAD_TYPE = MessageTagBuilderService::withPayloadType;
         private static final MessageTagBuilder MESSAGE_NAME = MessageTagBuilderService::withMessageName;
+        private static final MessageTagBuilder PAYLOAD = MessageTagBuilderService::withPayload;
 
         private MessageTagBuilder commandMessageTags =
                 (spanBuilder, message) -> MessageTagBuilder.builder()
@@ -363,6 +368,9 @@ public class MessageTagBuilderService {
                         break;
                     case MESSAGE_NAME:
                         messageTagBuilder = messageTagBuilder.with(MESSAGE_NAME);
+                        break;
+                    case PAYLOAD:
+                        messageTagBuilder = messageTagBuilder.with(PAYLOAD);
                         break;
                     default:
                         logger.warn("Unknown MessageTag [{}] used.", messageTag);

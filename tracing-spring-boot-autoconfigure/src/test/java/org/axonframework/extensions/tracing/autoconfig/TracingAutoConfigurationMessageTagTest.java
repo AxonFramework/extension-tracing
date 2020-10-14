@@ -38,14 +38,14 @@ class TracingAutoConfigurationMessageTagTest {
         contextRunner.withPropertyValues(
                 "axon.extension.tracing.span.commandTags=messageId, messageType, messageName",
                 "axon.extension.tracing.span.eventTags=messageId, aggregateId, messageName",
-                "axon.extension.tracing.span.queryTags=messageId, messageType, messageName"
+                "axon.extension.tracing.span.queryTags=messageId, messageType, payload"
         ).run(context -> {
             List<MessageTag> expectedCommandTags =
                     asList(MessageTag.MESSAGE_ID, MessageTag.MESSAGE_TYPE, MessageTag.MESSAGE_NAME);
             List<MessageTag> expectedEventTags =
                     asList(MessageTag.MESSAGE_ID, MessageTag.AGGREGATE_ID, MessageTag.MESSAGE_NAME);
             List<MessageTag> expectedQueryTags =
-                    asList(MessageTag.MESSAGE_ID, MessageTag.MESSAGE_TYPE, MessageTag.MESSAGE_NAME);
+                    asList(MessageTag.MESSAGE_ID, MessageTag.MESSAGE_TYPE, MessageTag.PAYLOAD);
 
             assertNotNull(context.getBeanNamesForType(SpanProperties.class));
             SpanProperties result = context.getBean(SpanProperties.class);

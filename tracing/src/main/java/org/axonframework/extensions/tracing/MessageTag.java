@@ -37,7 +37,11 @@ public enum MessageTag {
      * payload type of a {@code Message} if nothing more specific, like the {@link QueryMessage#getQueryName()}, has
      * been specified.
      */
-    MESSAGE_NAME("axon.message.message-name");
+    MESSAGE_NAME("axon.message.message-name"),
+    /**
+     * Tag referring to the payload of a {@link org.axonframework.messaging.Message}.
+     */
+    PAYLOAD("axon.message.payload");
 
     private final String tagKey;
 

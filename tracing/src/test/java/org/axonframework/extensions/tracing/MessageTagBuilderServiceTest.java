@@ -241,4 +241,17 @@ class MessageTagBuilderServiceTest {
                 () -> MessageTagBuilderService.builder().queryMessageTags((MessageTagBuilder) null)
         );
     }
+
+    @Test
+    void testWithCustomPayloadMessageTags() {
+        MessageTagBuilderService testSubjectWithCustomPayloadTag =
+                MessageTagBuilderService.builder().commandMessageTags(MessageTag.PAYLOAD).build();
+
+        CommandMessage<String> testCommand = GenericCommandMessage.asCommandMessage("some-command");
+
+        testSubjectWithCustomPayloadTag.withCommandMessageTags(testSpanBuilder, testCommand);
+
+        verify(testSpanBuilder).withTag(MessageTag.PAYLOAD.getTagKey(), testCommand.getPayload());
+        verify(testSpanBuilder, times(0)).withTag(eq(MessageTag.MESSAGE_ID.getTagKey()), anyString());
+    }
 }
