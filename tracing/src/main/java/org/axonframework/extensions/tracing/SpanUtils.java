@@ -45,7 +45,7 @@ public class SpanUtils {
      * @param spanBuilder the Span Builder to register the tags with
      * @param message     the message to retrieve details from
      * @return a builder with tags attached
-     * @deprecated
+     * @deprecated in favor of {@link MessageTagBuilderService#withMessageTags(Tracer.SpanBuilder, Message)}
      */
     @Deprecated
     public static Tracer.SpanBuilder withMessageTags(Tracer.SpanBuilder spanBuilder, Message<?> message) {
@@ -67,7 +67,7 @@ public class SpanUtils {
      * @param queryMessage the query to retrieve details from
      * @param queryName    the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
      * @return a builder with tags attached
-     * @deprecated
+     * @deprecated in favor of {@link MessageTagBuilderService#withQueryMessageTags(Tracer.SpanBuilder, QueryMessage)}
      */
     @Deprecated
     public static Tracer.SpanBuilder withQueryMessageTags(Tracer.SpanBuilder spanBuilder,

@@ -116,7 +116,7 @@ class MessageTagBuilderServiceTest {
 
         EventMessage<String> testEvent = GenericEventMessage.asEventMessage("some-event");
 
-        testSubject.withEvenMessageTags(testSpanBuilder, testEvent);
+        testSubject.withEventMessageTags(testSpanBuilder, testEvent);
 
         verify(testSpanBuilder).withTag(MessageTag.MESSAGE_ID.getTagKey(), testEvent.getIdentifier());
         verify(testSpanBuilder).withTag(MessageTag.MESSAGE_TYPE.getTagKey(), resolveMessageType(testEvent));
@@ -132,7 +132,7 @@ class MessageTagBuilderServiceTest {
         DomainEventMessage<String> testEvent =
                 new GenericDomainEventMessage<>("some-type", "some-aggregate-id", 42, "some-payload");
 
-        testSubject.withEvenMessageTags(testSpanBuilder, testEvent);
+        testSubject.withEventMessageTags(testSpanBuilder, testEvent);
 
         verify(testSpanBuilder).withTag(MessageTag.MESSAGE_ID.getTagKey(), testEvent.getIdentifier());
         verify(testSpanBuilder).withTag(MessageTag.MESSAGE_TYPE.getTagKey(), resolveMessageType(testEvent));
@@ -188,7 +188,7 @@ class MessageTagBuilderServiceTest {
                                         .eventMessageTags(MessageTag.MESSAGE_ID, MessageTag.PAYLOAD_TYPE)
                                         .build();
 
-        testSubjectWithCustomEventTags.withEvenMessageTags(testSpanBuilder, testEvent);
+        testSubjectWithCustomEventTags.withEventMessageTags(testSpanBuilder, testEvent);
 
         verify(testSpanBuilder).withTag(MessageTag.MESSAGE_ID.getTagKey(), testEvent.getIdentifier());
         verify(testSpanBuilder).withTag(MessageTag.PAYLOAD_TYPE.getTagKey(), testEvent.getPayloadType().getName());

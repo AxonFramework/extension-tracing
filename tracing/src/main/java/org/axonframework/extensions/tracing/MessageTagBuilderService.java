@@ -122,7 +122,7 @@ public class MessageTagBuilderService {
      * Add the given {@code message}'s information as tags to the given {@code spanBuilder}. Will validate if the given
      * {@code message} is of type {@link CommandMessage}, {@link EventMessage} or {@link QueryMessage} and based on that
      * invokes {@link #withCommandMessageTags(Tracer.SpanBuilder, CommandMessage)} , {@link
-     * #withEvenMessageTags(Tracer.SpanBuilder, EventMessage)} or {@link #withQueryMessageTags(Tracer.SpanBuilder,
+     * #withEventMessageTags(Tracer.SpanBuilder, EventMessage)} or {@link #withQueryMessageTags(Tracer.SpanBuilder,
      * QueryMessage)} respectively. If the {@code message} is none of these types, the {@code spanBuilder} will be
      * returned as is.
      *
@@ -135,7 +135,7 @@ public class MessageTagBuilderService {
             return withCommandMessageTags(spanBuilder, (CommandMessage<?>) message);
         }
         if (message instanceof EventMessage) {
-            return withEvenMessageTags(spanBuilder, (EventMessage<?>) message);
+            return withEventMessageTags(spanBuilder, (EventMessage<?>) message);
         }
         if (message instanceof QueryMessage) {
             return withQueryMessageTags(spanBuilder, (QueryMessage<?, ?>) message);
@@ -164,7 +164,7 @@ public class MessageTagBuilderService {
      * @param eventMessage the {@link EventMessage} to retrieve the tag information from
      * @return the {@code spanBuilder} with added tags from the given {@code eventMessage}
      */
-    public Tracer.SpanBuilder withEvenMessageTags(Tracer.SpanBuilder spanBuilder, EventMessage<?> eventMessage) {
+    public Tracer.SpanBuilder withEventMessageTags(Tracer.SpanBuilder spanBuilder, EventMessage<?> eventMessage) {
         return eventMessageTags.build(spanBuilder, eventMessage);
     }
 
