@@ -220,25 +220,22 @@ class MessageTagBuilderServiceTest {
 
     @Test
     void testBuildWithNullCommandMessageTagBuilderThrowsAxonConfigurationException() {
-        assertThrows(
-                AxonConfigurationException.class,
-                () -> MessageTagBuilderService.builder().commandMessageTags((MessageTagBuilder) null)
+        MessageTagBuilderService.Builder builder = MessageTagBuilderService.builder();
+        assertThrows(AxonConfigurationException.class, () -> builder.commandMessageTags((MessageTagBuilder) null)
         );
     }
 
     @Test
     void testBuildWithNullEventMessageTagBuilderThrowsAxonConfigurationException() {
-        assertThrows(
-                AxonConfigurationException.class,
-                () -> MessageTagBuilderService.builder().eventMessageTags((MessageTagBuilder) null)
+        MessageTagBuilderService.Builder builder = MessageTagBuilderService.builder();
+        assertThrows(AxonConfigurationException.class, () -> builder.eventMessageTags((MessageTagBuilder) null)
         );
     }
 
     @Test
     void testBuildWithNullQueryMessageTagBuilderThrowsAxonConfigurationException() {
-        assertThrows(
-                AxonConfigurationException.class,
-                () -> MessageTagBuilderService.builder().queryMessageTags((MessageTagBuilder) null)
+        MessageTagBuilderService.Builder builder = MessageTagBuilderService.builder();
+        assertThrows(AxonConfigurationException.class, () -> builder.queryMessageTags((MessageTagBuilder) null)
         );
     }
 

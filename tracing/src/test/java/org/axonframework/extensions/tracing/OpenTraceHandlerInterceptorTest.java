@@ -91,10 +91,8 @@ class OpenTraceHandlerInterceptorTest {
 
     @Test
     void testBuildWithNullMessageTagBuilderServiceThrowsAxonConfigurationException() {
-        assertThrows(
-                AxonConfigurationException.class,
-                () -> OpenTraceHandlerInterceptor.builder().messageTagBuilderService(null)
-        );
+        OpenTraceHandlerInterceptor.Builder builder = OpenTraceHandlerInterceptor.builder();
+        assertThrows(AxonConfigurationException.class, () -> builder.messageTagBuilderService(null));
     }
 
     private static class MyEvent {
