@@ -1,5 +1,7 @@
 package org.axonframework.extensions.tracing.autoconfig;
 
+import io.opentracing.Tracer;
+import io.opentracing.noop.NoopTracer;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
 import org.axonframework.extensions.tracing.TracingCommandGateway;
@@ -45,11 +47,14 @@ class AxonAutoConfigurationWithoutTracingTest {
     private CommandGateway commandGateway;
     @Autowired
     private QueryGateway queryGateway;
+    @Autowired
+    private Tracer tracer;
 
     @Test
     void testContextInitialization() {
         assertFalse(commandGateway instanceof TracingCommandGateway);
         assertFalse(queryGateway instanceof TracingQueryGateway);
+        assertTrue(tracer instanceof NoopTracer);
         assertTrue(commandGateway instanceof DefaultCommandGateway);
         assertTrue(queryGateway instanceof DefaultQueryGateway);
     }

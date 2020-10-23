@@ -1,5 +1,6 @@
 package org.axonframework.extensions.tracing.autoconfig;
 
+import io.opentracing.Tracer;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.extensions.tracing.MessageTagBuilderService;
 import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
@@ -50,11 +51,14 @@ class AxonAutoConfigurationWithTracingTest {
     private TracingProvider tracingProvider;
     @Autowired
     private MessageTagBuilderService messageTagBuilderService;
+    @Autowired
+    private Tracer tracer;
 
     @Test
     void testContextInitialization() {
         assertTrue(commandGateway instanceof TracingCommandGateway);
         assertTrue(queryGateway instanceof TracingQueryGateway);
+        assertNotNull(tracer);
         assertNotNull(openTraceDispatchInterceptor);
         assertNotNull(openTraceHandlerInterceptor);
         assertNotNull(tracingProvider);
