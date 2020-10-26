@@ -54,7 +54,6 @@ class AxonAutoConfigurationWithoutTracingTest {
     void testContextInitialization() {
         assertFalse(commandGateway instanceof TracingCommandGateway);
         assertFalse(queryGateway instanceof TracingQueryGateway);
-        assertTrue(tracer instanceof NoopTracer);
         assertTrue(commandGateway instanceof DefaultCommandGateway);
         assertTrue(queryGateway instanceof DefaultQueryGateway);
     }
