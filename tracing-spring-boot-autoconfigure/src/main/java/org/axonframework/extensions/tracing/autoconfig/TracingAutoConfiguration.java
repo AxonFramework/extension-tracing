@@ -19,6 +19,7 @@ import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingConfigurer;
+import org.axonframework.extensions.tracing.MessageTagBuilderService;
 import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
 import org.axonframework.extensions.tracing.OpenTraceHandlerInterceptor;
 import org.axonframework.extensions.tracing.TracingCommandGateway;
@@ -30,7 +31,6 @@ import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.springboot.autoconfig.EventProcessingAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -38,7 +38,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Auto configure a tracing capabilities.
+ * Auto configuration defining all required beans to allow a {@link Tracer} to be used on Axon's messaging
+ * infrastructure.
  *
  * @author Christophe Bouhier
  * @author Steven van Beelen
@@ -47,8 +48,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(EventProcessingAutoConfiguration.class)
-@EnableConfigurationProperties(TracingExtensionProperties.class)
-@ConditionalOnClass(io.opentracing.Tracer.class)
+@EnableConfigurationProperties(value = {TracingExtensionProperties.class, SpanProperties.class})
 @ConditionalOnProperty(value = "axon.extension.tracing.enabled", matchIfMissing = true)
 public class TracingAutoConfiguration {
 
@@ -58,8 +58,12 @@ public class TracingAutoConfiguration {
     }
 
     @Bean
-    public OpenTraceHandlerInterceptor traceHandlerInterceptor(Tracer tracer) {
-        return new OpenTraceHandlerInterceptor(tracer);
+    public OpenTraceHandlerInterceptor traceHandlerInterceptor(Tracer tracer,
+                                                               MessageTagBuilderService messageTagBuilderService) {
+        return OpenTraceHandlerInterceptor.builder()
+                                          .tracer(tracer)
+                                          .messageTagBuilderService(messageTagBuilderService)
+                                          .build();
     }
 
     @Bean
@@ -67,11 +71,13 @@ public class TracingAutoConfiguration {
     public QueryGateway queryGateway(Tracer tracer,
                                      QueryBus queryBus,
                                      OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
-                                     OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
+                                     OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
+                                     MessageTagBuilderService messageTagBuilderService) {
         queryBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
         TracingQueryGateway tracingQueryGateway = TracingQueryGateway.builder()
                                                                      .delegateQueryBus(queryBus)
                                                                      .tracer(tracer)
+                                                                     .messageTagBuilderService(messageTagBuilderService)
                                                                      .build();
         tracingQueryGateway.registerDispatchInterceptor(openTraceDispatchInterceptor);
         return tracingQueryGateway;
@@ -82,12 +88,15 @@ public class TracingAutoConfiguration {
     public CommandGateway commandGateway(Tracer tracer,
                                          CommandBus commandBus,
                                          OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
-                                         OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
+                                         OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
+                                         MessageTagBuilderService messageTagBuilderService) {
         commandBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
-        TracingCommandGateway tracingCommandGateway = TracingCommandGateway.builder()
-                                                                           .tracer(tracer)
-                                                                           .delegateCommandBus(commandBus)
-                                                                           .build();
+        TracingCommandGateway tracingCommandGateway =
+                TracingCommandGateway.builder()
+                                     .tracer(tracer)
+                                     .delegateCommandBus(commandBus)
+                                     .messageTagBuilderService(messageTagBuilderService)
+                                     .build();
         tracingCommandGateway.registerDispatchInterceptor(openTraceDispatchInterceptor);
         return tracingCommandGateway;
     }
@@ -103,5 +112,14 @@ public class TracingAutoConfiguration {
         eventProcessingConfigurer.registerDefaultHandlerInterceptor(
                 (configuration, name) -> openTraceHandlerInterceptor
         );
+    }
+
+    @Bean
+    public MessageTagBuilderService spanBuilderService(SpanProperties spanProperties) {
+        return MessageTagBuilderService.builder()
+                                       .commandMessageTags(spanProperties.getCommandTags())
+                                       .eventMessageTags(spanProperties.getEventTags())
+                                       .queryMessageTags(spanProperties.getQueryTags())
+                                       .build();
     }
 }

@@ -24,7 +24,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Corrado Musumeci
  * @since 4.4
  */
-
 @ConfigurationProperties(prefix = "axon.extension.tracing")
 public class TracingExtensionProperties {
 

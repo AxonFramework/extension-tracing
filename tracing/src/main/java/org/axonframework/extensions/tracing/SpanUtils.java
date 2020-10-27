@@ -39,14 +39,15 @@ public class SpanUtils {
     private static final String TAG_AXON_PAYLOAD_TYPE = "axon.message.payload-type";
     private static final String TAG_AXON_MESSAGE_NAME = "axon.message.message-name";
 
-
     /**
      * Registers message-specific tags to the given {@code spanBuilder} based on the given {@code message}.
      *
      * @param spanBuilder the Span Builder to register the tags with
      * @param message     the message to retrieve details from
      * @return a builder with tags attached
+     * @deprecated in favor of {@link MessageTagBuilderService#withMessageTags(Tracer.SpanBuilder, Message)}
      */
+    @Deprecated
     public static Tracer.SpanBuilder withMessageTags(Tracer.SpanBuilder spanBuilder, Message<?> message) {
         Tracer.SpanBuilder sb = spanBuilder.withTag(TAG_AXON_ID, message.getIdentifier())
                                            .withTag(TAG_AXON_MESSAGE_TYPE, resolveMessageType(message))
@@ -66,7 +67,9 @@ public class SpanUtils {
      * @param queryMessage the query to retrieve details from
      * @param queryName    the name provided by the {@link org.axonframework.queryhandling.QueryGateway} caller
      * @return a builder with tags attached
+     * @deprecated in favor of {@link MessageTagBuilderService#withQueryMessageTags(Tracer.SpanBuilder, QueryMessage)}
      */
+    @Deprecated
     public static Tracer.SpanBuilder withQueryMessageTags(Tracer.SpanBuilder spanBuilder,
                                                           Message<?> queryMessage,
                                                           String queryName) {
