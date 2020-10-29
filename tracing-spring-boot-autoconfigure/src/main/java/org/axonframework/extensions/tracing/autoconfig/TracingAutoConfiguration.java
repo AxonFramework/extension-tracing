@@ -44,6 +44,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Christophe Bouhier
  * @author Steven van Beelen
  * @author Corrado Musumeci
+ * @author Lucas Campos
  * @since 4.0
  */
 @Configuration
@@ -68,7 +69,7 @@ public class TracingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public QueryGateway queryGateway(Tracer tracer,
+    public QueryGateway tracingQueryGateway(Tracer tracer,
                                      QueryBus queryBus,
                                      OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
                                      OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
@@ -85,7 +86,7 @@ public class TracingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandGateway commandGateway(Tracer tracer,
+    public CommandGateway tracingCommandGateway(Tracer tracer,
                                          CommandBus commandBus,
                                          OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
                                          OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
