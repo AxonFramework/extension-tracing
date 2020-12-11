@@ -94,7 +94,7 @@ public class OpenTraceHandlerInterceptor implements MessageHandlerInterceptor<Me
 
         Tracer.SpanBuilder spanBuilder = getParentSpan(message)
                 .map(parentSpan -> tracer.buildSpan(operationName).asChildOf(parentSpan))
-                .orElse(tracer.buildSpan(operationName));
+                .orElseGet(() -> tracer.buildSpan(operationName));
 
         final Span span = messageTagBuilderService.withMessageTags(spanBuilder, unitOfWork.getMessage())
                                                   .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
