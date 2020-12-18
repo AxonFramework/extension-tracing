@@ -1,4 +1,7 @@
-# Axon Framework - Tracing Extension [![Build Status](https://travis-ci.org/AxonFramework/extension-tracing.svg?branch=master)](https://travis-ci.org/AxonFramework/extension-tracing)
+# Axon Framework - Tracing Extension 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.axonframework.extensions.tracing/axon-tracing/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.axonframework.extensions.tracing/axon-tracing/)
+![Build Status](https://github.com/AxonFramework/extension-tracing/workflows/Tracing%20Extension/badge.svg?branch=master)
+[![SonarCloud Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AxonFramework_extension-tracing&metric=alert_status)](https://sonarcloud.io/dashboard?id=AxonFramework_extension-tracing)
 
 Axon Framework is a framework for building evolutionary, event-driven microservice systems,
  based on the principles of Domain Driven Design, Command-Query Responsibility Segregation (CQRS) and Event Sourcing.
