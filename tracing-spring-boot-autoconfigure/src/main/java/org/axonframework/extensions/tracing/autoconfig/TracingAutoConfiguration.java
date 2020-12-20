@@ -29,8 +29,10 @@ import org.axonframework.messaging.correlation.CorrelationDataProvider;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.springboot.autoconfig.EventProcessingAutoConfiguration;
+import org.axonframework.springboot.autoconfig.InfraConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -49,6 +51,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(EventProcessingAutoConfiguration.class)
+@AutoConfigureBefore(InfraConfiguration.class)
 @EnableConfigurationProperties(value = {TracingExtensionProperties.class, SpanProperties.class})
 @ConditionalOnProperty(value = "axon.extension.tracing.enabled", matchIfMissing = true)
 public class TracingAutoConfiguration {
@@ -70,10 +73,10 @@ public class TracingAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public QueryGateway tracingQueryGateway(Tracer tracer,
-                                     QueryBus queryBus,
-                                     OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
-                                     OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
-                                     MessageTagBuilderService messageTagBuilderService) {
+                                            QueryBus queryBus,
+                                            OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
+                                            OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
+                                            MessageTagBuilderService messageTagBuilderService) {
         queryBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
         TracingQueryGateway tracingQueryGateway = TracingQueryGateway.builder()
                                                                      .delegateQueryBus(queryBus)
@@ -87,10 +90,10 @@ public class TracingAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public CommandGateway tracingCommandGateway(Tracer tracer,
-                                         CommandBus commandBus,
-                                         OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
-                                         OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
-                                         MessageTagBuilderService messageTagBuilderService) {
+                                                CommandBus commandBus,
+                                                OpenTraceDispatchInterceptor openTraceDispatchInterceptor,
+                                                OpenTraceHandlerInterceptor openTraceHandlerInterceptor,
+                                                MessageTagBuilderService messageTagBuilderService) {
         commandBus.registerHandlerInterceptor(openTraceHandlerInterceptor);
         TracingCommandGateway tracingCommandGateway =
                 TracingCommandGateway.builder()
