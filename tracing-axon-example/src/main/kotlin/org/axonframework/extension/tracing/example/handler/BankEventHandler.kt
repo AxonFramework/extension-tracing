@@ -25,10 +25,6 @@ import org.axonframework.extension.tracing.example.api.MoneyAddedEvent
 import org.axonframework.queryhandling.QueryHandler
 import org.springframework.stereotype.Component
 
-/**
- * Collecting event handler for logging, connected to a Kafka consumer with the processing group name "kafka-group".
- * Further configured in the [org.axonframework.extension.kafka.example.KafkaAxonExampleApplication].
- */
 @Component
 class BankEventHandler {
 
