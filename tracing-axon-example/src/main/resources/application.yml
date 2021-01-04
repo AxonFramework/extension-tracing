@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: tracingAxonExample
+
+axon:
+  extension:
+    tracing:
+      span:
+        commandTags: MESSAGE_ID, MESSAGE_TYPE, PAYLOAD_TYPE, MESSAGE_NAME, PAYLOAD
+        eventTags: MESSAGE_ID, AGGREGATE_ID, PAYLOAD_TYPE, MESSAGE_NAME, PAYLOAD
+        queryTags: MESSAGE_ID, MESSAGE_TYPE, PAYLOAD_TYPE, MESSAGE_NAME, PAYLOAD

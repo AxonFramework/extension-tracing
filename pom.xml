@@ -24,6 +24,7 @@
         <module>tracing</module>
         <module>tracing-spring-boot-autoconfigure</module>
         <module>tracing-spring-boot-starter</module>
+        <module>tracing-axon-example</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -58,7 +59,7 @@
         <slf4j.version>1.7.30</slf4j.version>
         <log4j.version>2.14.0</log4j.version>
 
-        <jackson.version>2.9.4</jackson.version>
+        <jackson.version>2.12.0</jackson.version>
         <commons-io.version>2.8.0</commons-io.version>
         <reactor.version>3.4.1</reactor.version>
 
