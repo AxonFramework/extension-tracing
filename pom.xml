@@ -65,7 +65,7 @@
 
         <!-- tests -->
         <junit.jupiter.version>5.7.0</junit.jupiter.version>
-        <mockito.version>3.7.0</mockito.version>
+        <mockito.version>3.7.7</mockito.version>
         <jaxb.version>2.3.1</jaxb.version>
         <assertj.version>3.18.1</assertj.version>
 
