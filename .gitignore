@@ -1,5 +1,9 @@
-*.iml
+# Maven build artifacts can be ignored
 target/
+# ...but keep the wrapper jar
+!.mvn/wrapper/maven-wrapper.jar
+
+*.iml
 .idea/
 .classpath
 .project
