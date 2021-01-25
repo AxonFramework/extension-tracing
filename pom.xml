@@ -68,7 +68,7 @@
         <junit.jupiter.version>5.7.0</junit.jupiter.version>
         <mockito.version>3.7.7</mockito.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <assertj.version>3.18.1</assertj.version>
+        <assertj.version>3.19.0</assertj.version>
 
         <!-- plugins -->
         <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
