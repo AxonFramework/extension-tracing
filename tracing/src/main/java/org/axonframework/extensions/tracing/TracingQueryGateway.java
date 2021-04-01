@@ -124,7 +124,6 @@ public class TracingQueryGateway implements QueryGateway {
                                                                      Q query,
                                                                      ResponseType<I> initialResponseType,
                                                                      ResponseType<U> updateResponseType,
-                                                                     SubscriptionQueryBackpressure backpressure,
                                                                      int updateBufferSize) {
         SubscriptionQueryMessage<?, I, U> queryMessage = new GenericSubscriptionQueryMessage<>(
                 asMessage(query), queryName, initialResponseType, updateResponseType
@@ -134,12 +133,23 @@ public class TracingQueryGateway implements QueryGateway {
                 queryMessage,
                 (childSpan) -> {
                     SubscriptionQueryResult<I, U> subscriptionQueryResult = delegate.subscriptionQuery(
-                            queryName, queryMessage, initialResponseType, updateResponseType, backpressure,
+                            queryName, queryMessage, initialResponseType, updateResponseType,
                             updateBufferSize
                     );
                     return new TraceableSubscriptionQueryResult<>(subscriptionQueryResult, childSpan);
                 }
         );
+    }
+
+    @Override
+    @Deprecated
+    public <Q, I, U> SubscriptionQueryResult<I, U> subscriptionQuery(String queryName,
+                                                                     Q query,
+                                                                     ResponseType<I> initialResponseType,
+                                                                     ResponseType<U> updateResponseType,
+                                                                     SubscriptionQueryBackpressure backpressure,
+                                                                     int updateBufferSize) {
+        return subscriptionQuery(queryName, query, initialResponseType, updateResponseType, updateBufferSize);
     }
 
     private <R, T> T getWithSpan(String operation, QueryMessage<?, R> query, SpanSupplier<T> supplier) {
