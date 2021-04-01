@@ -167,7 +167,7 @@ class TracingQueryGatewayTest {
         String initial = "initial";
         String update = "update";
         SubscriptionQueryResult subscriptionQueryResult = createSubscriptionQueryResult(initial, update);
-        when(mockQueryBus.subscriptionQuery(any(), any(), anyInt()))
+        when(mockQueryBus.subscriptionQuery(any(), anyInt()))
                 .thenReturn(subscriptionQueryResult);
 
         MockSpan span = mockTracer.buildSpan("testSubscriptionQuery").start();
@@ -199,7 +199,7 @@ class TracingQueryGatewayTest {
         String[] updates = new String[]{"update1", "update2"};
         SubscriptionQueryResult subscriptionQueryResult = createSubscriptionQueryResult(initial, updates);
 
-        when(mockQueryBus.subscriptionQuery(any(), any(), anyInt()))
+        when(mockQueryBus.subscriptionQuery(any(), anyInt()))
                 .thenReturn(subscriptionQueryResult);
 
         MockSpan span = mockTracer.buildSpan("testSubscriptionQueryResults").start();
@@ -238,10 +238,10 @@ class TracingQueryGatewayTest {
     }
 
     private <I, U> SubscriptionQueryResult createSubscriptionQueryResult(I initial, U... updates) {
-        return new DefaultSubscriptionQueryResult(
+        return new DefaultSubscriptionQueryResult<>(
                 Mono.just(GenericQueryResponseMessage.asResponseMessage(initial)),
                 Flux.fromStream(Stream.of(updates)
-                                      .map(update -> GenericSubscriptionQueryUpdateMessage.asUpdateMessage(update))),
+                                      .map(GenericSubscriptionQueryUpdateMessage::asUpdateMessage)),
                 () -> true);
     }
 
