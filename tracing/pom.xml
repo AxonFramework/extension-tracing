@@ -44,6 +44,7 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.opentracing</groupId>
