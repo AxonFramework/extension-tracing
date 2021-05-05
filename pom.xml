@@ -71,7 +71,7 @@
         <assertj.version>3.19.0</assertj.version>
 
         <!-- plugins -->
-        <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-clean.version>3.1.0</maven-clean.version>
         <maven-install.version>2.5.2</maven-install.version>
         <maven-resources.version>3.2.0</maven-resources.version>
