@@ -81,7 +81,7 @@
         <maven-assembly.version>3.3.0</maven-assembly.version>
         <maven-release.version>2.5.3</maven-release.version>
         <maven-failsafe.version>2.22.2</maven-failsafe.version>
-        <maven-javadoc.version>3.2.0</maven-javadoc.version>
+        <maven-javadoc.version>3.3.0</maven-javadoc.version>
         <maven-jar.version>3.2.0</maven-jar.version>
         <maven-source.version>3.2.1</maven-source.version>
         <maven-enforcer.version>1.4.1</maven-enforcer.version>
