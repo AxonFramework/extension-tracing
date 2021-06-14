@@ -59,7 +59,7 @@
         <log4j.version>2.14.1</log4j.version>
 
         <jackson.version>2.12.3</jackson.version>
-        <commons-io.version>2.9.0</commons-io.version>
+        <commons-io.version>2.10.0</commons-io.version>
         <reactor.version>3.4.6</reactor.version>
         <opentracing-spring-tracer-configuration-starter.version>0.4.0</opentracing-spring-tracer-configuration-starter.version>
         <opentracing-mock.version>0.33.0</opentracing-mock.version>
