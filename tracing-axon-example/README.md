@@ -25,7 +25,7 @@ mvn clean package -f ./tracing-axon-example
 
 ### Running example application
  
-You can start the application by running `java -jar ./tracing-axon-example/target/axon-tracing-example.jar`.
+You can start the application by running `java -jar ./tracing-axon-example/target/tracing-axon-example.jar`.
 
 You can access the jaeger ui on [http://localhost:16686](http://localhost:16686).
 You should see the span created there looking at the Service with name `tracingAxonExample`.
