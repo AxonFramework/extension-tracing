@@ -18,6 +18,8 @@ package org.axonframework.extensions.tracing.autoconfig;
 import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.config.Configurer;
+import org.axonframework.config.ConfigurerModule;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.extensions.tracing.MessageTagBuilderService;
 import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
@@ -110,10 +112,9 @@ public class TracingAutoConfiguration {
         return new TracingProvider(tracer);
     }
 
-    @Autowired
-    public void configureEventHandler(EventProcessingConfigurer eventProcessingConfigurer,
-                                      OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
-        eventProcessingConfigurer.registerDefaultHandlerInterceptor(
+    @Bean
+    public ConfigurerModule configureTracingInterceptor(OpenTraceHandlerInterceptor openTraceHandlerInterceptor) {
+        return configurer -> configurer.eventProcessing().registerDefaultHandlerInterceptor(
                 (configuration, name) -> openTraceHandlerInterceptor
         );
     }
