@@ -128,6 +128,14 @@ class TracingQueryGatewayTest {
     }
 
     @Test
+    void testQuery_nullQuery() {
+        //noinspection unchecked
+        when(mockQueryBus.query(any(QueryMessage.class)))
+                .thenReturn(CompletableFuture.completedFuture(answer1));
+        assertDoesNotThrow(() -> testSubject.query("query", null, String.class));
+    }
+
+    @Test
     void testScatterGather() {
         //noinspection unchecked
         when(mockQueryBus.scatterGather(any(QueryMessage.class), anyLong(), any()))
@@ -160,6 +168,15 @@ class TracingQueryGatewayTest {
             assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
+    }
+
+    @Test
+    void testScatterGather_nullQuery() {
+        assertDoesNotThrow(() -> testSubject.scatterGather("query",
+                                                           null,
+                                                           ResponseTypes.instanceOf(String.class),
+                                                           1L,
+                                                           TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -235,6 +252,16 @@ class TracingQueryGatewayTest {
             assertFalse(mockSpans.get(0).tags().isEmpty());
         }
         assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
+    }
+
+    @Test
+    void testSubscriptionQuery_nullQuery() {
+        when(mockQueryBus.subscriptionQuery(any(), anyInt()))
+                .thenReturn(createSubscriptionQueryResult("initial", "update"));
+        assertDoesNotThrow(() -> testSubject.subscriptionQuery("query",
+                                                               null,
+                                                               instanceOf(String.class),
+                                                               instanceOf(String.class)));
     }
 
     private <I, U> SubscriptionQueryResult createSubscriptionQueryResult(I initial, U... updates) {
