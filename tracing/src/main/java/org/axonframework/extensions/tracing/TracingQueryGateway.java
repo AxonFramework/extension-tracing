@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
+import static org.axonframework.common.ObjectUtils.nullSafeTypeOf;
 import static org.axonframework.messaging.GenericMessage.asMessage;
 
 /**
@@ -57,6 +58,21 @@ public class TracingQueryGateway implements QueryGateway {
     private final MessageTagBuilderService messageTagBuilderService;
 
     /**
+     * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
+     * <p>
+     * Will assert that the {@link Tracer} and delegate {@link QueryGateway} are not {@code null}, and will throw an
+     * {@link AxonConfigurationException} if they are.
+     *
+     * @param builder the {@link Builder} used to instantiate a {@link TracingQueryGateway} instance
+     */
+    protected TracingQueryGateway(Builder builder) {
+        builder.validate();
+        this.tracer = builder.tracer;
+        this.delegate = builder.buildDelegateQueryGateway();
+        this.messageTagBuilderService = builder.messageTagBuilderService;
+    }
+
+    /**
      * Instantiate a Builder to be able to create a {@link TracingQueryGateway}.
      * <p>
      * Either a {@link QueryBus} or {@link QueryGateway} can be provided to be used to delegate the dispatching of
@@ -72,26 +88,11 @@ public class TracingQueryGateway implements QueryGateway {
         return new Builder();
     }
 
-    /**
-     * Instantiate a {@link TracingQueryGateway} based on the fields contained in the {@link Builder}.
-     * <p>
-     * Will assert that the {@link Tracer} and delegate {@link QueryGateway} are not {@code null}, and will throw an
-     * {@link AxonConfigurationException} if they are.
-     *
-     * @param builder the {@link Builder} used to instantiate a {@link TracingQueryGateway} instance
-     */
-    protected TracingQueryGateway(Builder builder) {
-        builder.validate();
-        this.tracer = builder.tracer;
-        this.delegate = builder.buildDelegateQueryGateway();
-        this.messageTagBuilderService = builder.messageTagBuilderService;
-    }
-
     @Override
     public <R, Q> CompletableFuture<R> query(String queryName, Q query, ResponseType<R> responseType) {
         QueryMessage<?, R> queryMessage = new GenericQueryMessage<>(asMessage(query), queryName, responseType);
         return getWithSpan(
-                "query_" + SpanUtils.messageName(query.getClass(), queryName),
+                "query_" + SpanUtils.messageName(nullSafeTypeOf(query), queryName),
                 queryMessage,
                 (childSpan) -> delegate.query(queryName, queryMessage, responseType)
                                        .whenComplete((r, e) -> {
@@ -109,7 +110,7 @@ public class TracingQueryGateway implements QueryGateway {
                                           TimeUnit timeUnit) {
         QueryMessage<?, R> queryMessage = new GenericQueryMessage<>(asMessage(query), queryName, responseType);
         return getWithSpan(
-                "scatterGather_" + SpanUtils.messageName(query.getClass(), queryName),
+                "scatterGather_" + SpanUtils.messageName(nullSafeTypeOf(query), queryName),
                 queryMessage,
                 (childSpan) -> delegate.scatterGather(queryName, queryMessage, responseType, timeout, timeUnit)
                                        .onClose(() -> {
@@ -129,7 +130,7 @@ public class TracingQueryGateway implements QueryGateway {
                 asMessage(query), queryName, initialResponseType, updateResponseType
         );
         return getWithSpan(
-                "subscriptionQuery_" + SpanUtils.messageName(query.getClass(), queryName),
+                "subscriptionQuery_" + SpanUtils.messageName(nullSafeTypeOf(query), queryName),
                 queryMessage,
                 (childSpan) -> {
                     SubscriptionQueryResult<I, U> subscriptionQueryResult = delegate.subscriptionQuery(
