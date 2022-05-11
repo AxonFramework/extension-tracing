@@ -9,7 +9,6 @@ import org.axonframework.extensions.tracing.TracingCommandGateway;
 import org.axonframework.extensions.tracing.TracingProvider;
 import org.axonframework.extensions.tracing.TracingQueryGateway;
 import org.axonframework.queryhandling.QueryGateway;
-import org.axonframework.springboot.autoconfig.AxonServerAutoConfiguration;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
         JmxAutoConfiguration.class,
         WebClientAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class,
-        DataSourceAutoConfiguration.class,
-        AxonServerAutoConfiguration.class
+        DataSourceAutoConfiguration.class
 })
 @ExtendWith(SpringExtension.class)
 class AxonAutoConfigurationWithTracingTest {
