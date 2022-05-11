@@ -26,6 +26,7 @@ import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.responsetypes.ResponseType;
 import org.axonframework.queryhandling.DefaultQueryGateway;
 import org.axonframework.queryhandling.GenericQueryMessage;
+import org.axonframework.queryhandling.GenericStreamingQueryMessage;
 import org.axonframework.queryhandling.GenericSubscriptionQueryMessage;
 import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryGateway;
@@ -33,6 +34,8 @@ import org.axonframework.queryhandling.QueryMessage;
 import org.axonframework.queryhandling.SubscriptionQueryBackpressure;
 import org.axonframework.queryhandling.SubscriptionQueryMessage;
 import org.axonframework.queryhandling.SubscriptionQueryResult;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +44,7 @@ import java.util.stream.Stream;
 import static org.axonframework.common.BuilderUtils.assertNonNull;
 import static org.axonframework.common.ObjectUtils.nullSafeTypeOf;
 import static org.axonframework.messaging.GenericMessage.asMessage;
+import static org.axonframework.queryhandling.QueryMessage.queryName;
 
 /**
  * A tracing {@link QueryGateway} which activates a calling {@link Span}, when the {@link CompletableFuture} completes.
@@ -117,6 +121,29 @@ public class TracingQueryGateway implements QueryGateway {
                                            childSpan.log("resultReceived");
                                            childSpan.finish();
                                        })
+        );
+    }
+
+    @Override
+    public <R, Q> Publisher<R> streamingQuery(Q query, Class<R> responseType) {
+        return streamingQuery(queryName(query), query, responseType);
+    }
+
+    @Override
+    public <R, Q> Publisher<R> streamingQuery(String queryName, Q query, Class<R> responseType) {
+        GenericStreamingQueryMessage<Q, R> queryMessagesMessage = new GenericStreamingQueryMessage<>(query,
+                                                                                                               queryName,
+                                                                                                               responseType);
+        return getWithSpan(
+                "streamingQuery_" + SpanUtils.messageName(nullSafeTypeOf(query), queryName),
+                queryMessagesMessage,
+                (childSpan) -> Flux.from(delegate.streamingQuery(queryName, queryMessagesMessage, responseType))
+                        .doOnSubscribe(unused ->  childSpan.log("subscriptionStarted"))
+                        .doOnNext(unused -> childSpan.log("answerReceived"))
+                        .doFinally(unused -> {
+                            childSpan.log("subscriptionTerminated");
+                            childSpan.finish();
+                        })
         );
     }
 

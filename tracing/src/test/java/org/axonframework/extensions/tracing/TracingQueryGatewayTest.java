@@ -31,6 +31,7 @@ import org.axonframework.queryhandling.QueryMessage;
 import org.axonframework.queryhandling.QueryResponseMessage;
 import org.axonframework.queryhandling.SubscriptionQueryResult;
 import org.junit.jupiter.api.*;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -270,6 +271,41 @@ class TracingQueryGatewayTest {
                 Flux.fromStream(Stream.of(updates)
                                       .map(GenericSubscriptionQueryUpdateMessage::asUpdateMessage)),
                 () -> true);
+    }
+
+    @Test
+    void testStreamingQuery() {
+
+        Publisher<QueryResponseMessage<Object>> updates = Flux.just(new GenericQueryResponseMessage<>("answer1"),
+                                                                    new GenericQueryResponseMessage<>("answer2"));
+        when(mockQueryBus.streamingQuery(any()))
+                .thenReturn(updates);
+
+        MockSpan span = mockTracer.buildSpan("testStreamingQueryResults").start();
+        ScopeManager scopeManager = mockTracer.scopeManager();
+        try (final Scope ignored = scopeManager.activate(span)) {
+            Publisher<String> stringPublisher = testSubject.streamingQuery(new MyQuery(),
+                                                                           String.class);
+            // check the following results are there
+            StepVerifier.create(Flux.from(stringPublisher))
+                        .expectNext("answer1")
+                        .expectNext("answer2")
+                        .expectComplete()
+                        .verify();
+
+            // Verify the parent span is restored, and that a child span was finished.
+            Span activeSpan = mockTracer.activeSpan();
+            assertEquals(span, activeSpan);
+
+            List<MockSpan> mockSpans = mockTracer.finishedSpans();
+            assertEquals(1, mockSpans.size());
+            assertEquals("streamingQuery_MyQuery", mockSpans.get(0).operationName());
+            assertNotNull(mockSpans.get(0).logEntries());
+            assertFalse(mockSpans.get(0).logEntries().isEmpty());
+            assertNotNull(mockSpans.get(0).tags());
+            assertFalse(mockSpans.get(0).tags().isEmpty());
+        }
+        assertNull(scopeManager.activeSpan(), "There should be no activeSpan");
     }
 
     private static class MyQuery {

@@ -3,7 +3,6 @@ package org.axonframework.extensions.tracing.autoconfig;
 import io.opentracing.Tracer;
 import org.axonframework.extensions.tracing.MessageTag;
 import org.axonframework.extensions.tracing.MessageTagBuilderService;
-import org.axonframework.springboot.autoconfig.AxonServerAutoConfiguration;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -31,6 +30,7 @@ import static org.mockito.Mockito.*;
 class TracingAutoConfigurationMessageTagTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withPropertyValues("axon.axonserver.enabled=false")
             .withConfiguration(AutoConfigurations.of(TracingAutoConfigurationMessageTagTest.Config.class));
 
     @Test
@@ -75,8 +75,7 @@ class TracingAutoConfigurationMessageTagTest {
 
     @EnableAutoConfiguration(exclude = {
             JpaRepositoriesAutoConfiguration.class,
-            HibernateJpaAutoConfiguration.class,
-            AxonServerAutoConfiguration.class
+            HibernateJpaAutoConfiguration.class
     })
     public static class Config {
 
