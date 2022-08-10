@@ -60,7 +60,7 @@
 
         <jackson.version>2.13.3</jackson.version>
         <commons-io.version>2.11.0</commons-io.version>
-        <reactor.version>3.4.21</reactor.version>
+        <reactor.version>3.4.22</reactor.version>
         <opentracing-spring-tracer-configuration-starter.version>0.4.0</opentracing-spring-tracer-configuration-starter.version>
         <opentracing-mock.version>0.33.0</opentracing-mock.version>
 
