@@ -24,7 +24,7 @@
     </parent>
 
     <artifactId>tracing-axon-example</artifactId>
-    <version>4.5.3-SNAPSHOT</version>
+    <version>4.6.0-SNAPSHOT</version>
 
     <name>Axon Framework Tracing Extension - Spring Boot Example</name>
     <description>Example module for the Tracing Extension of Axon Framework</description>
