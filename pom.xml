@@ -53,9 +53,9 @@
 
         <axon.version>4.6.0</axon.version>
 
-        <spring.boot.version>2.7.3</spring.boot.version>
+        <spring.boot.version>2.7.4</spring.boot.version>
 
-        <slf4j.version>2.0.1</slf4j.version>
+        <slf4j.version>2.0.2</slf4j.version>
         <log4j.version>2.19.0</log4j.version>
 
         <jackson.version>2.13.4</jackson.version>
@@ -65,7 +65,7 @@
         <opentracing-mock.version>0.33.0</opentracing-mock.version>
 
         <!-- tests -->
-        <junit.jupiter.version>5.9.0</junit.jupiter.version>
+        <junit.jupiter.version>5.9.1</junit.jupiter.version>
         <mockito.version>4.8.0</mockito.version>
         <jaxb.version>2.3.1</jaxb.version>
         <assertj.version>3.23.1</assertj.version>
