@@ -16,12 +16,15 @@
 
 package org.axonframework.extensions.tracing;
 
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.messaging.Message;
 import org.axonframework.queryhandling.QueryMessage;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 /**
  * Utility class providing useful methods for attaching information to Spans.
@@ -134,5 +137,22 @@ public class SpanUtils {
             return name;
         }
         return payloadType.getSimpleName();
+    }
+
+    /**
+     * Adds tracing to the given {@link Publisher}. Will add log events to the provided {@code childSpan}.
+     * @param publisher The Publisher to add tracing to.
+     * @param childSpan The span to which the Publisher should be traced.
+     * @return The instrumented Publisher.
+     * @param <R> The response type of the Publisher.
+     */
+    static <R> Publisher<R> addTracingToPublisher(Publisher<R> publisher, Span childSpan) {
+        return Flux.from(publisher)
+                   .doOnSubscribe(unused -> childSpan.log("subscriptionStarted"))
+                   .doOnNext(unused -> childSpan.log("answerReceived"))
+                   .doFinally(unused -> {
+                       childSpan.log("subscriptionTerminated");
+                       childSpan.finish();
+                   });
     }
 }
