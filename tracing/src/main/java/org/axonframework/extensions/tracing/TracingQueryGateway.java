@@ -35,7 +35,6 @@ import org.axonframework.queryhandling.SubscriptionQueryBackpressure;
 import org.axonframework.queryhandling.SubscriptionQueryMessage;
 import org.axonframework.queryhandling.SubscriptionQueryResult;
 import org.reactivestreams.Publisher;
-import reactor.core.publisher.Flux;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +42,7 @@ import java.util.stream.Stream;
 
 import static org.axonframework.common.BuilderUtils.assertNonNull;
 import static org.axonframework.common.ObjectUtils.nullSafeTypeOf;
+import static org.axonframework.extensions.tracing.SpanUtils.addTracingToPublisher;
 import static org.axonframework.messaging.GenericMessage.asMessage;
 import static org.axonframework.queryhandling.QueryMessage.queryName;
 
@@ -132,18 +132,12 @@ public class TracingQueryGateway implements QueryGateway {
     @Override
     public <R, Q> Publisher<R> streamingQuery(String queryName, Q query, Class<R> responseType) {
         GenericStreamingQueryMessage<Q, R> queryMessagesMessage = new GenericStreamingQueryMessage<>(query,
-                                                                                                               queryName,
-                                                                                                               responseType);
+                                                                                                     queryName,
+                                                                                                     responseType);
         return getWithSpan(
                 "streamingQuery_" + SpanUtils.messageName(nullSafeTypeOf(query), queryName),
                 queryMessagesMessage,
-                (childSpan) -> Flux.from(delegate.streamingQuery(queryName, queryMessagesMessage, responseType))
-                        .doOnSubscribe(unused ->  childSpan.log("subscriptionStarted"))
-                        .doOnNext(unused -> childSpan.log("answerReceived"))
-                        .doFinally(unused -> {
-                            childSpan.log("subscriptionTerminated");
-                            childSpan.finish();
-                        })
+                (childSpan) -> addTracingToPublisher(delegate.streamingQuery(queryName, queryMessagesMessage, responseType), childSpan)
         );
     }
 
