@@ -32,7 +32,7 @@
     <properties>
         <opentracing.version>3.3.1</opentracing.version>
         <kotlin.version>1.7.20</kotlin.version>
-        <kotlin-logging-jvm.version>3.0.2</kotlin-logging-jvm.version>
+        <kotlin-logging-jvm.version>3.0.3</kotlin-logging-jvm.version>
     </properties>
 
     <dependencies>
