@@ -415,6 +415,16 @@
             </build>
         </profile>
 
+        <profile>
+            <id>java17-modules</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>tracing-spring-boot-3-integrationtests</module>
+            </modules>
+        </profile>
+
     </profiles>
 
     <repositories>
