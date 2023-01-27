@@ -18,9 +18,7 @@ package org.axonframework.extensions.tracing.autoconfig;
 import io.opentracing.Tracer;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.config.Configurer;
 import org.axonframework.config.ConfigurerModule;
-import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.extensions.tracing.MessageTagBuilderService;
 import org.axonframework.extensions.tracing.OpenTraceDispatchInterceptor;
 import org.axonframework.extensions.tracing.OpenTraceHandlerInterceptor;
@@ -32,14 +30,13 @@ import org.axonframework.queryhandling.QueryBus;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.springboot.autoconfig.EventProcessingAutoConfiguration;
 import org.axonframework.springboot.autoconfig.InfraConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * Auto configuration defining all required beans to allow a {@link Tracer} to be used on Axon's messaging
@@ -51,7 +48,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Lucas Campos
  * @since 4.0
  */
-@Configuration
+@AutoConfiguration
 @AutoConfigureAfter(EventProcessingAutoConfiguration.class)
 @AutoConfigureBefore(InfraConfiguration.class)
 @EnableConfigurationProperties(value = {TracingExtensionProperties.class, SpanProperties.class})
