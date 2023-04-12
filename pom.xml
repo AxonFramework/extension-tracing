@@ -55,40 +55,40 @@
             ${project.basedir}/../coverage-report/target/site/jacoco-aggregate/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
 
-        <axon.version>4.7.0</axon.version>
+        <axon.version>4.7.3</axon.version>
 
-        <spring.boot.version>2.7.8</spring.boot.version>
+        <spring.boot.version>2.7.10</spring.boot.version>
 
         <slf4j.version>2.0.7</slf4j.version>
         <log4j.version>2.20.0</log4j.version>
 
-        <jackson.version>2.13.4</jackson.version>
+        <jackson.version>2.14.2</jackson.version>
         <commons-io.version>2.11.0</commons-io.version>
-        <reactor.version>3.5.4</reactor.version>
+        <reactor.version>3.5.5</reactor.version>
         <opentracing-spring-tracer-configuration-starter.version>0.4.0</opentracing-spring-tracer-configuration-starter.version>
         <opentracing-mock.version>0.33.0</opentracing-mock.version>
 
         <!-- tests -->
-        <junit.jupiter.version>5.9.1</junit.jupiter.version>
+        <junit.jupiter.version>5.9.2</junit.jupiter.version>
         <mockito.version>4.9.0</mockito.version>
         <jaxb.version>2.3.1</jaxb.version>
         <assertj.version>3.24.2</assertj.version>
 
         <!-- plugins -->
-        <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <maven-clean.version>3.2.0</maven-clean.version>
-        <maven-install.version>3.1.0</maven-install.version>
-        <maven-resources.version>3.3.0</maven-resources.version>
+        <maven-install.version>3.1.1</maven-install.version>
+        <maven-resources.version>3.3.1</maven-resources.version>
         <maven-surefire.version>2.22.2</maven-surefire.version>
         <maven-deploy.version>3.0.0</maven-deploy.version>
         <maven-compiler.version>3.11.0</maven-compiler.version>
         <maven-assembly.version>3.5.0</maven-assembly.version>
         <maven-release.version>3.0.0</maven-release.version>
-        <maven-failsafe.version>2.22.2</maven-failsafe.version>
+        <maven-failsafe.version>3.0.0</maven-failsafe.version>
         <maven-javadoc.version>3.5.0</maven-javadoc.version>
         <maven-jar.version>3.3.0</maven-jar.version>
         <maven-source.version>3.2.1</maven-source.version>
-        <maven-enforcer.version>3.2.1</maven-enforcer.version>
+        <maven-enforcer.version>3.3.0</maven-enforcer.version>
     </properties>
 
     <dependencies>
