@@ -76,7 +76,7 @@
 
         <!-- plugins -->
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
-        <maven-clean.version>3.2.0</maven-clean.version>
+        <maven-clean.version>3.3.1</maven-clean.version>
         <maven-install.version>3.1.1</maven-install.version>
         <maven-resources.version>3.3.1</maven-resources.version>
         <maven-surefire.version>2.22.2</maven-surefire.version>

@@ -49,7 +49,7 @@
 
     <properties>
         <!-- plugins -->
-        <maven-clean.version>3.2.0</maven-clean.version>
+        <maven-clean.version>3.3.1</maven-clean.version>
         <maven-install.version>3.1.1</maven-install.version>
         <maven-resources.version>3.3.1</maven-resources.version>
         <maven-deploy.version>3.0.0</maven-deploy.version>
