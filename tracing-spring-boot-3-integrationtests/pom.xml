@@ -38,6 +38,7 @@
     <packaging>jar</packaging>
 
     <properties>
+        <axon.version>4.8.0</axon.version>
         <opentracing-jaeger.version>3.3.1</opentracing-jaeger.version>
 
         <jar-plugin.version>3.3.0</jar-plugin.version>
@@ -49,7 +50,7 @@
         <dependency>
             <groupId>org.axonframework</groupId>
             <artifactId>axon-spring-boot-autoconfigure</artifactId>
-            <version>4.8.0</version>
+            <version>${axon.version}</version>
         </dependency>
         <dependency>
             <groupId>org.axonframework.extensions.tracing</groupId>
