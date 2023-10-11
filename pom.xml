@@ -65,7 +65,7 @@
         <jackson.version>2.14.2</jackson.version>
         <!-- Other -->
         <commons-io.version>2.14.0</commons-io.version>
-        <reactor.version>3.5.10</reactor.version>
+        <reactor.version>3.5.11</reactor.version>
         <!-- Testing -->
         <assertj.version>3.24.2</assertj.version>
         <jaxb.version>2.3.1</jaxb.version>
