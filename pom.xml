@@ -57,7 +57,7 @@
         <opentracing-spring-tracer-configuration-starter.version>0.4.0</opentracing-spring-tracer-configuration-starter.version>
         <opentracing-mock.version>0.33.0</opentracing-mock.version>
         <!-- Spring -->
-        <spring.boot.version>2.7.16</spring.boot.version>
+        <spring.boot.version>2.7.17</spring.boot.version>
         <!-- Logging -->
         <slf4j.version>2.0.9</slf4j.version>
         <log4j.version>2.21.0</log4j.version>
