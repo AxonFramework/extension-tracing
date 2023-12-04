@@ -54,7 +54,7 @@
         <maven-resources.version>3.3.1</maven-resources.version>
         <maven-deploy.version>3.0.0</maven-deploy.version>
         <maven-compiler.version>3.11.0</maven-compiler.version>
-        <maven-javadoc.version>3.6.2</maven-javadoc.version>
+        <maven-javadoc.version>3.6.3</maven-javadoc.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
     </properties>
 
