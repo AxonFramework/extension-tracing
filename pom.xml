@@ -64,7 +64,7 @@
         <!-- Serialization -->
         <jackson.version>2.16.0</jackson.version>
         <!-- Other -->
-        <commons-io.version>2.15.1</commons-io.version>
+        <commons-io.version>2.16.0</commons-io.version>
         <reactor.version>3.6.4</reactor.version>
         <!-- Testing -->
         <assertj.version>3.25.3</assertj.version>
@@ -79,7 +79,7 @@
         <maven-deploy.version>3.0.0</maven-deploy.version>
         <maven-enforcer.version>3.4.1</maven-enforcer.version>
         <maven-failsafe.version>3.2.5</maven-failsafe.version>
-        <maven-gpg.version>3.2.1</maven-gpg.version>
+        <maven-gpg.version>3.2.2</maven-gpg.version>
         <maven-install.version>3.1.1</maven-install.version>
         <maven-jar.version>3.3.0</maven-jar.version>
         <maven-javadoc.version>3.6.3</maven-javadoc.version>
