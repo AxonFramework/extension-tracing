@@ -59,13 +59,13 @@
         <!-- Spring -->
         <spring.boot.version>2.7.18</spring.boot.version>
         <!-- Logging -->
-        <slf4j.version>2.0.12</slf4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <log4j.version>2.23.1</log4j.version>
         <!-- Serialization -->
         <jackson.version>2.16.0</jackson.version>
         <!-- Other -->
-        <commons-io.version>2.16.0</commons-io.version>
-        <reactor.version>3.6.4</reactor.version>
+        <commons-io.version>2.16.1</commons-io.version>
+        <reactor.version>3.6.5</reactor.version>
         <!-- Testing -->
         <assertj.version>3.25.3</assertj.version>
         <jaxb.version>2.3.1</jaxb.version>
@@ -79,9 +79,9 @@
         <maven-deploy.version>3.0.0</maven-deploy.version>
         <maven-enforcer.version>3.4.1</maven-enforcer.version>
         <maven-failsafe.version>3.2.5</maven-failsafe.version>
-        <maven-gpg.version>3.2.2</maven-gpg.version>
+        <maven-gpg.version>3.2.3</maven-gpg.version>
         <maven-install.version>3.1.1</maven-install.version>
-        <maven-jar.version>3.3.0</maven-jar.version>
+        <maven-jar.version>3.4.0</maven-jar.version>
         <maven-javadoc.version>3.6.3</maven-javadoc.version>
         <maven-release.version>3.0.1</maven-release.version>
         <maven-source.version>3.3.1</maven-source.version>
