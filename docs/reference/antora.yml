@@ -1,0 +1,14 @@
+name: tracing-extension-reference
+title: Tracing Extension Guide
+version: true
+prerelease: true
+start_page: ROOT:index.adoc
+
+asciidoc:
+  attributes:
+    component_description: Extension adding OpenTracing integration to Axon's infrastructure components, superseded by integrated Open Telemetry support
+    type: extension-reference
+    group: axon-framework
+
+nav:
+  - modules/nav.adoc
