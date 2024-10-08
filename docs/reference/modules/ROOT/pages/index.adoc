@@ -20,7 +20,7 @@ With this instrumentation, we can chain synchronous and asynchronous commands an
 </dependency>
 ----
 
-The first dependency is xref:axon_framework_ref:ROOT:modules#_axon_tracing_spring_boot_starter[Spring Boot starter for Axon Tracing extension], which is the quickest start in to an extension configuration.
+The first dependency is xref:axon-framework-reference:ROOT:modules#_axon_tracing_spring_boot_starter[Spring Boot starter for Axon Tracing extension], which is the quickest start in to an extension configuration.
 
 The second dependency is https://www.jaegertracing.io/[Jaeger,window=_blank,role=external] implementation for OpenTracing.
 
