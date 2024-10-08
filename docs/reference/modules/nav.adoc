@@ -1,2 +1,2 @@
-* xref::index.adoc[]
-** xref::config.adoc[]
+* xref::config.adoc[]
+* xref::release-notes.adoc[]
