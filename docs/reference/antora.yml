@@ -1,7 +1,8 @@
 name: tracing-extension-reference
 title: Tracing Extension Guide
-version: true
-prerelease: true
+version:
+  axon-tracing-(?<version>+({0..9}).+({0..9})).*: $<version>
+  master: development
 start_page: ROOT:index.adoc
 
 asciidoc:
