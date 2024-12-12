@@ -1,6 +1,6 @@
 site:
   title: Tracing Extension docs PREVIEW
-  start_page: tracing_extension_guide::index.adoc
+  start_page: tracing-extension-reference::index.adoc
 
 content:
   sources:

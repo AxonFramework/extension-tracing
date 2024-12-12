@@ -5,7 +5,7 @@ The extension can be disabled setting the property `axon.extension.tracing.enabl
 
 Furthermore, there is a more fine-grained configuration option of the tracing span tags on commands, events and queries. You can customize span tags easily, mixing and matching between available tag `MESSAGE_ID`, `AGGREGATE_ID`, `MESSAGE_TYPE`, `PAYLOAD_TYPE`, `MESSAGE_NAME` and `PAYLOAD`. Take into account that some of the tags make sense on a certain span type, but not on another, and some of them have an hidden cost on network (such as payload). Use them wisely.
 
-[sources,properties]
+[source,properties]
 ----
 axon.extension.tracing.span.commandTags=MESSAGE_ID, MESSAGE_TYPE, PAYLOAD_TYPE, MESSAGE_NAME
 axon.extension.tracing.span.eventTags=MESSAGE_ID, AGGREGATE_ID, MESSAGE_TYPE, PAYLOAD_TYPE
