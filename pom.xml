@@ -65,9 +65,9 @@
         <jackson.version>2.16.0</jackson.version>
         <!-- Other -->
         <commons-io.version>2.18.0</commons-io.version>
-        <reactor.version>3.7.1</reactor.version>
+        <reactor.version>3.7.2</reactor.version>
         <!-- Testing -->
-        <assertj.version>3.27.2</assertj.version>
+        <assertj.version>3.27.3</assertj.version>
         <jaxb.version>2.3.1</jaxb.version>
         <junit.jupiter.version>5.10.1</junit.jupiter.version>
         <mockito.version>4.11.0</mockito.version>
