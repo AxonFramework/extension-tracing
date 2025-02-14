@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 
 /**
- * Auto configuration defining all required beans to allow a {@link Tracer} to be used on Axon's messaging
+ * Auto-configuration defining all required beans to allow a {@link Tracer} to be used on Axon's messaging
  * infrastructure.
  *
  * @author Christophe Bouhier
@@ -69,6 +70,7 @@ public class TracingAutoConfiguration {
                                           .build();
     }
 
+    @Lazy
     @Bean
     @ConditionalOnMissingBean
     public QueryGateway tracingQueryGateway(Tracer tracer,
@@ -86,6 +88,7 @@ public class TracingAutoConfiguration {
         return tracingQueryGateway;
     }
 
+    @Lazy
     @Bean
     @ConditionalOnMissingBean
     public CommandGateway tracingCommandGateway(Tracer tracer,
