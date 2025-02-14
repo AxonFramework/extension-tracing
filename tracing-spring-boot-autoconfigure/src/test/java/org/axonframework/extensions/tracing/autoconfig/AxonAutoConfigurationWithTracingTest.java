@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023. Axon Framework
+ * Copyright (c) 2010-2025. Axon Framework
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,55 +27,51 @@ import org.axonframework.extensions.tracing.TracingQueryGateway;
 import org.axonframework.queryhandling.QueryGateway;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test class validating the auto configuration of distributed tracing specific infrastructure components.
+ * Test class validating the auto-configuration of distributed tracing specific infrastructure components.
  *
  * @author Christophe Bouhier
  */
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
-@EnableAutoConfiguration(exclude = {
-        JmxAutoConfiguration.class,
-        WebClientAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class,
-        DataSourceAutoConfiguration.class
-})
+
 @ExtendWith(SpringExtension.class)
 class AxonAutoConfigurationWithTracingTest {
 
-    @Autowired
-    private CommandGateway commandGateway;
-    @Autowired
-    private QueryGateway queryGateway;
-
-    @Autowired
-    private OpenTraceHandlerInterceptor openTraceHandlerInterceptor;
-    @Autowired
-    private OpenTraceDispatchInterceptor openTraceDispatchInterceptor;
-    @Autowired
-    private TracingProvider tracingProvider;
-    @Autowired
-    private MessageTagBuilderService messageTagBuilderService;
-    @Autowired
-    private Tracer tracer;
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withPropertyValues("axon.axonserver.enabled=false")
+            .withConfiguration(AutoConfigurations.of(Config.class));
 
     @Test
     void testContextInitialization() {
-        assertTrue(commandGateway instanceof TracingCommandGateway);
-        assertTrue(queryGateway instanceof TracingQueryGateway);
-        assertNotNull(tracer);
-        assertNotNull(openTraceDispatchInterceptor);
-        assertNotNull(openTraceHandlerInterceptor);
-        assertNotNull(tracingProvider);
-        assertNotNull(messageTagBuilderService);
+        contextRunner.run(context -> {
+            assertInstanceOf(TracingCommandGateway.class, context.getBean(CommandGateway.class));
+            assertInstanceOf(TracingQueryGateway.class, context.getBean(QueryGateway.class));
+            assertNotNull(context.getBean(Tracer.class));
+            assertNotNull(context.getBean(OpenTraceDispatchInterceptor.class));
+            assertNotNull(context.getBean(OpenTraceHandlerInterceptor.class));
+            assertNotNull(context.getBean(TracingProvider.class));
+            assertNotNull(context.getBean(MessageTagBuilderService.class));
+        });
+    }
+
+    @EnableAutoConfiguration(exclude = {
+            JmxAutoConfiguration.class,
+            WebClientAutoConfiguration.class,
+            HibernateJpaAutoConfiguration.class,
+            DataSourceAutoConfiguration.class
+    })
+    public static class Config {
+
     }
 }
