@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2010-2024. Axon Framework
+  ~ Copyright (c) 2010-2025. Axon Framework
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@
 
     <properties>
         <!-- plugins -->
+        <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
         <maven-clean.version>3.4.0</maven-clean.version>
         <maven-install.version>3.1.3</maven-install.version>
         <maven-resources.version>3.3.1</maven-resources.version>
@@ -68,7 +69,7 @@
 
     <profiles>
         <profile>
-            <id>release-sign-artifacts</id>
+            <id>sign</id>
             <activation>
                 <property>
                     <name>performRelease</name>
@@ -119,8 +120,13 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${maven-deploy.version}</version>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -150,23 +156,10 @@
         </plugins>
     </build>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>sonatype</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <uniqueVersion>true</uniqueVersion>
-        </snapshotRepository>
-        <repository>
-            <id>sonatype</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-            <uniqueVersion>false</uniqueVersion>
-        </repository>
-    </distributionManagement>
     <scm>
         <connection>scm:git:git://github.com/AxonFramework/extension-tracing.git</connection>
         <developerConnection>scm:git:git@github.com:AxonFramework/extension-tracing.git</developerConnection>
         <url>https://github.com/AxonFramework/extension-tracing</url>
         <tag>HEAD</tag>
     </scm>
-
 </project>
