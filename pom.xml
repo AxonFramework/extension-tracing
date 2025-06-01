@@ -69,13 +69,13 @@
         <!-- Testing -->
         <assertj.version>3.27.3</assertj.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <junit.jupiter.version>5.12.2</junit.jupiter.version>
+        <junit.jupiter.version>5.13.0</junit.jupiter.version>
         <mockito.version>4.11.0</mockito.version>
         <!-- Build / Plugins -->
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
         <jacoco-maven.version>0.8.13</jacoco-maven.version>
         <maven-assembly.version>3.7.1</maven-assembly.version>
-        <maven-clean.version>3.4.1</maven-clean.version>
+        <maven-clean.version>3.5.0</maven-clean.version>
         <maven-compiler.version>3.14.0</maven-compiler.version>
         <maven-enforcer.version>3.5.0</maven-enforcer.version>
         <maven-failsafe.version>3.5.3</maven-failsafe.version>
