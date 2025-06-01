@@ -50,7 +50,7 @@
     <properties>
         <!-- plugins -->
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
-        <maven-clean.version>3.4.1</maven-clean.version>
+        <maven-clean.version>3.5.0</maven-clean.version>
         <maven-install.version>3.1.4</maven-install.version>
         <maven-resources.version>3.3.1</maven-resources.version>
         <maven-deploy.version>3.0.0</maven-deploy.version>
