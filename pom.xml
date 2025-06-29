@@ -69,7 +69,7 @@
         <!-- Testing -->
         <assertj.version>3.27.3</assertj.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <junit.jupiter.version>5.13.1</junit.jupiter.version>
+        <junit.jupiter.version>5.13.2</junit.jupiter.version>
         <mockito.version>4.11.0</mockito.version>
         <!-- Build / Plugins -->
         <central-publishing-maven-plugin.version>0.8.0</central-publishing-maven-plugin.version>
