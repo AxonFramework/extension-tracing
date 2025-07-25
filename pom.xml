@@ -53,7 +53,7 @@
             ${project.basedir}/../coverage-report/target/site/jacoco-aggregate/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <!-- Main -->
-        <axon.version>4.11.2</axon.version>
+        <axon.version>4.12.0</axon.version>
         <opentracing-spring-tracer-configuration-starter.version>0.4.0</opentracing-spring-tracer-configuration-starter.version>
         <opentracing-mock.version>0.33.0</opentracing-mock.version>
         <!-- Spring -->
