@@ -26,7 +26,7 @@
 
     <groupId>org.axonframework.extensions.tracing</groupId>
     <artifactId>axon-tracing-spring-boot-starter</artifactId>
-    <version>4.12.0</version>
+    <version>4.12.1-SNAPSHOT</version>
 
     <name>Axon Framework Tracing Extension - Spring Boot Starter</name>
     <description>Spring Boot Starter module for the Tracing Extension of Axon Framework</description>
@@ -160,6 +160,6 @@
         <connection>scm:git:git://github.com/AxonFramework/extension-tracing.git</connection>
         <developerConnection>scm:git:git@github.com:AxonFramework/extension-tracing.git</developerConnection>
         <url>https://github.com/AxonFramework/extension-tracing</url>
-        <tag>axon-tracing-4.12.0</tag>
+        <tag>HEAD</tag>
     </scm>
 </project>
