@@ -22,7 +22,7 @@ A request can be visualized and analysed across Axon clients, command handlers, 
 </dependency>
 ----
 
-The first dependency is xref:axon-framework-reference:ROOT:modules#_axon_tracing_spring_boot_starter[Spring Boot starter for Axon Tracing extension], which is the quickest start in to an extension configuration.
+The first dependency is Spring Boot starter for Axon Tracing extension, which is the quickest start in to an extension configuration.
 
 The second dependency is https://www.jaegertracing.io/[Jaeger,window=_blank,role=external] implementation for OpenTracing.
 
