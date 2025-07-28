@@ -19,7 +19,7 @@
 
     <groupId>org.axonframework.extensions.tracing</groupId>
     <artifactId>axon-tracing-parent</artifactId>
-    <version>4.11.1-SNAPSHOT</version>
+    <version>4.12.0</version>
     <modules>
         <module>tracing</module>
         <module>tracing-spring-boot-autoconfigure</module>
@@ -506,7 +506,7 @@
         <connection>scm:git:git://github.com/AxonFramework/extension-tracing.git</connection>
         <developerConnection>scm:git:git@github.com:AxonFramework/extension-tracing.git</developerConnection>
         <url>https://github.com/AxonFramework/extension-tracing</url>
-        <tag>HEAD</tag>
+        <tag>axon-tracing-4.12.0</tag>
     </scm>
 
     <developers>
