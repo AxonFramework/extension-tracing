@@ -1,7 +1,13 @@
-# Axon Framework - Tracing Extension 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.axonframework.extensions.tracing/axon-tracing/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.axonframework.extensions.tracing/axon-tracing/)
-![Build Status](https://github.com/AxonFramework/extension-tracing/workflows/Tracing%20Extension/badge.svg?branch=master)
-[![SonarCloud Status](https://sonarcloud.io/api/project_badges/measure?project=AxonFramework_extension-tracing&metric=alert_status)](https://sonarcloud.io/dashboard?id=AxonFramework_extension-tracing)
+> [!IMPORTANT]
+> ## 📦 This repository is archived
+>
+> The Tracing extension has been replaced with the OpenTelemetry integration that resides in **Axoniq Framework**.
+> Please use the new location for the latest releases, issues and pull requests concerning tracing support:
+>
+> - 💻 **Source code:** [`axoniq-tracing` module in Axoniq Framework](https://github.com/AxonIQ/axoniq-framework/tree/main/tracing/axoniq-tracing-micrometer)
+> - 📚 **Documentation:** - can be found [here](https://docs.axoniq.io/axon-framework-reference/latest/tracing/)
+
+# Axon Framework - Tracing Extension
 
 Axon Framework is a framework for building evolutionary, event-driven microservice systems,
  based on the principles of Domain Driven Design, Command-Query Responsibility Segregation (CQRS) and Event Sourcing.
